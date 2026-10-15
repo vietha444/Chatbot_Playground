@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HPU2 AI Assistant - Trợ Lý AI & Hệ Thống RAG Đa Năng</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- KaTeX CSS & JS for Math Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- Code Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" id="hljs-light-theme">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+
+    <!-- App Styles -->
+    <link rel="stylesheet" href="css/style.css?v=2.6.0">
+    <link rel="stylesheet" href="css/office.css?v=2.6.0">
+</head>
+<body>
+
+    <div class="app-layout">
+        <!-- TOP HEADER -->
+        <header class="top-nav">
+            <div class="brand-wrapper" style="display: flex; align-items: center; gap: 0.65rem;">
+                <div class="brand">
+                    <div class="brand-logo">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                        </svg>
+                    </div>
+                    <div class="brand-info">
+                        <h1>HPU2 AI Assistant</h1>
+                        <span class="brand-subtitle">Trợ Lý AI & Nền Tảng RAG Đa Năng</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABS NAVIGATION: TÁCH RIÊNG CHAT AI VÀ CHAT RAG -->
+            <nav class="nav-tabs">
+                <button class="tab-btn active" data-tab="tab-direct-chat">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <span>Trò Chuyện AI</span>
+                </button>
+                <button class="tab-btn" data-tab="tab-rag-chat">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+                    <span>Hỏi Đáp RAG Tài Liệu</span>
+                </button>
+                <button class="tab-btn" data-tab="tab-ocr">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    <span>OCR & Công Thức Toán</span>
+                </button>
+                <button class="tab-btn" data-tab="tab-documents">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                    <span>Kho & Quản Lý Tài Liệu</span>
+                </button>
+                <button class="tab-btn" data-tab="tab-office">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M12 18v-6"></path><path d="M9 15l3 3 3-3"></path></svg>
+                    <span>Office Studio AI</span>
+                </button>
+            </nav>
+
+            <div class="header-actions">
+                <!-- KHU VỰC TÀI KHOẢN NGƯỜI DÙNG & PHÂN QUYỀN -->
+                <div id="user-header-section" class="user-header-section">
+                    <div id="logged-in-box" class="logged-in-box" style="display: none;">
+                        <span id="user-role-badge" class="user-role-badge user-badge">👤 Người dùng</span>
+                        <span id="user-display-name" class="user-display-name">haviet</span>
+                        <button id="logout-btn" class="btn btn-outline btn-xs" title="Đăng xuất / Đổi tài khoản">Đổi tài khoản</button>
+                    </div>
+                    <div id="auth-buttons-group" class="auth-buttons-group">
+                        <button id="open-login-btn" class="btn btn-secondary btn-sm" title="Đăng nhập tài khoản">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                            <span>Đăng Nhập</span>
+                        </button>
+                        <button id="open-signup-btn" class="btn btn-primary btn-sm" title="Tạo tài khoản mới (không cần email)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                            <span>Đăng Ký</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Nút Lịch Sử Chat lưu trữ Neon DB -->
+                <button id="open-history-btn" class="btn btn-outline btn-sm history-toggle-btn" title="Xem bảng danh sách lịch sử">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Lịch Sử</span>
+                </button>
+
+                <!-- Nút Thu Gọn / Mở Rộng Thanh Bên Lịch Sử (Phía Phải) -->
+                <button id="toggle-sidebar-btn" class="icon-btn sidebar-toggle-btn" title="Thu gọn / Mở rộng Lịch sử chat bên phải (Ctrl+B)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="15" y1="3" x2="15" y2="21"></line></svg>
+                </button>
+
+                <!-- Theme Toggle Button -->
+                <button id="theme-toggle" class="icon-btn" title="Chuyển chế độ Sáng / Tối">
+                    <svg id="theme-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- WORKSPACE AREA WITH REALTIME CHAT SIDEBAR (PLACED ON THE RIGHT) -->
+        <div class="app-body">
+            <!-- MAIN CONTENT AREA -->
+            <main class="main-container">
+
+            <!-- ======================================================== -->
+            <!-- TAB 1: TRÒ CHUYỆN AI TRỰC TIẾP (DIRECT CHAT - KHÔNG CẦN TÀI LIỆU) -->
+            <!-- ======================================================== -->
+            <section id="tab-direct-chat" class="tab-content active">
+                <div class="direct-chat-wrapper">
+                    <!-- KHUNG TIN NHẮN -->
+                    <div id="direct-messages-container" class="messages-container">
+                        <!-- Hero Greeting Card -->
+                        <div class="chat-hero-card">
+                            <div class="hero-icon">✨</div>
+                            <h2>Trò Chuyện Trực Tiếp Với AI</h2>
+                            <p>Hỏi đáp tự do, lập trình, giải toán và phân tích chuyên sâu cùng các mô hình trí tuệ nhân tạo thế hệ mới.</p>
+                            
+                            <!-- Prompt Suggestions -->
+                            <div class="hero-prompt-suggestions">
+                                <button class="prompt-chip" data-text="Giải thích ngắn gọn nguyên lý hoạt động của thuật toán tìm kiếm RAG và cơ chế Reranker">
+                                    💡 Nguyên lý hoạt động của RAG & Reranker
+                                </button>
+                                <button class="prompt-chip" data-text="Viết một đoạn code Python sử dụng thư viện PyMuPDF để bóc tách văn bản từ file PDF">
+                                    💻 Code Python bóc tách text từ PDF
+                                </button>
+                                <button class="prompt-chip" data-text="Viết công thức định lý Bayes và giải thích ý nghĩa từng thành phần bằng mã LaTeX">
+                                    📐 Công thức định lý Bayes bằng LaTeX
+                                </button>
+                                <button class="prompt-chip" data-text="Hãy gợi ý 5 phương pháp giảng dạy tích cực áp dụng cho môn Tin học phổ thông">
+                                    📖 5 phương pháp dạy Tin học tích cực
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KHUNG ĐIỀU KHIỂN & NHẬP LIỆU (ĐẨY BỘ CHỌN MÔ HÌNH XUỐNG DƯỚI) -->
+                    <div class="chat-bottom-dock">
+                        <!-- Thanh công cụ phía trên ô nhập -->
+                        <div class="dock-controls-bar">
+                            <div class="dock-model-picker">
+                                <span class="dock-label">🤖 Mô hình:</span>
+                                <select id="select-model-direct" class="dock-select">
+                                    <option value="qwen2.5:14b" selected>Qwen 2.5 14B (Mặc định - Thông minh, Tiếng Việt chuẩn)</option>
+                                    <option value="qwen2.5vl:7b">Qwen 2.5-VL 7B (Đa phương thức & Thị giác Multimodal)</option>
+                                    <option value="qwen2.5:32b">Qwen 2.5 32B (Mô hình lớn, Suy luận chuyên sâu)</option>
+                                    <option value="deepseek-r1:8b">DeepSeek R1 8B (Suy luận logic & CoT Reasoning)</option>
+                                    <option value="llama3.1:latest">Llama 3.1 8B (Meta AI)</option>
+                                    <option value="llama3.2:latest">Llama 3.2 (Gọn nhẹ & Tốc độ cao)</option>
+                                    <option value="glm-4.7-flash:latest">GLM 4.7 Flash (Tốc độ phản hồi cực nhanh)</option>
+                                    <option value="granite3.2-vision:latest">IBM Granite 3.2 Vision (Nhận diện hình ảnh)</option>
+                                    <option value="mistral:latest">Mistral 7B (Đa dụng)</option>
+                                    <option value="deepseek-coder:6.7b">DeepSeek Coder 6.7B (Chuyên lập trình)</option>
+                                </select>
+                            </div>
+                            <div class="dock-actions-right">
+                                <button id="new-direct-chat-btn" class="btn btn-outline btn-xs" title="Bắt đầu hội thoại mới">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    <span>Đoạn Chat Mới</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Dải xem trước ảnh đính kèm (Direct Chat) -->
+                        <div id="direct-attached-preview" class="attached-images-bar" style="display: none;"></div>
+
+                        <!-- Hộp gõ văn bản -->
+                        <div class="dock-input-wrapper">
+                            <input type="file" id="direct-image-file-input" accept="image/png, image/jpeg, image/webp" multiple style="display: none;">
+                            <button type="button" id="direct-attach-img-btn" class="dock-tool-btn" title="Đính kèm hình ảnh để hỏi AI Multimodal (hoặc dán Ctrl+V)">
+                                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                            </button>
+                            <textarea id="direct-chat-input" placeholder="Hỏi bất kỳ điều gì với AI (đính kèm ảnh hoặc dán Ctrl+V, Shift+Enter xuống dòng)..." rows="1"></textarea>
+                            <button id="direct-chat-send-btn" class="dock-send-btn" title="Gửi tin nhắn">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ======================================================== -->
+            <!-- TAB 2: HỎI ĐÁP RAG TÀI LIỆU (HYBRID SEARCH & BGE RERANKER) -->
+            <!-- ======================================================== -->
+            <section id="tab-rag-chat" class="tab-content">
+                <div class="chat-container">
+                    <!-- Mobile Backdrop Overlay cho Sidebar Drawer -->
+                    <div id="sidebar-backdrop" class="sidebar-backdrop" style="display: none;"></div>
+
+                    <!-- SIDEBAR CẤU HÌNH VÀ BỘ CHỌN ĐA TÀI LIỆU RAG -->
+                    <aside class="chat-sidebar" id="chat-sidebar">
+                        <div class="sidebar-header">
+                            <div>
+                                <h3>Kho Tri Thức RAG</h3>
+                                <small style="color: var(--text-muted); font-size: 0.75rem;">Chọn 1 hoặc nhiều tài liệu để tra cứu</small>
+                            </div>
+                            <div class="sidebar-header-btns">
+                                <button id="new-rag-chat-btn" class="btn btn-secondary btn-sm" title="Làm mới phiên hỏi đáp">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    <span>Mới</span>
+                                </button>
+                                <button id="close-mobile-sidebar-btn" class="icon-btn mobile-only-btn" title="Đóng danh sách">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- BỘ CHỌN ĐA TÀI LIỆU RAG -->
+                        <div class="config-group" id="collection-group">
+                            <div class="collection-header">
+                                <label>
+                                    <span class="label-title">📚 Danh Sách Tài Liệu</span>
+                                </label>
+                                <div class="collection-quick-actions">
+                                    <button type="button" id="select-all-docs-btn" class="text-link-btn">Chọn tất cả</button>
+                                    <span class="sep">•</span>
+                                    <button type="button" id="clear-all-docs-btn" class="text-link-btn">Bỏ chọn</button>
+                                </div>
+                            </div>
+
+                            <div class="search-input-wrap">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                <input type="text" id="doc-search-input" placeholder="Tìm tài liệu theo tên..." autocomplete="off">
+                            </div>
+
+                            <!-- Danh sách checkboxes tài liệu -->
+                            <div id="collections-checkbox-list" class="collections-checkbox-list">
+                                <!-- Injected dynamically -->
+                            </div>
+
+                            <!-- Vùng chip tóm tắt các tài liệu đã chọn -->
+                            <div class="selected-docs-summary">
+                                <div class="summary-label">
+                                    <span>Đang áp dụng: <strong id="selected-docs-count">0</strong> tài liệu</span>
+                                </div>
+                                <div id="selected-docs-chips" class="selected-docs-chips">
+                                    <!-- Chips injected by JS -->
+                                </div>
+                            </div>
+
+                            <!-- Thanh trượt chỉnh ngưỡng Reranker -->
+                            <div class="reranker-slider-wrap">
+                                <div class="slider-header">
+                                    <span class="label-subtitle">Ngưỡng lọc điểm Reranker:</span>
+                                    <strong id="threshold-val-text">0.30</strong>
+                                </div>
+                                <input type="range" id="reranker-threshold-slider" min="0.05" max="0.90" step="0.05" value="0.30" class="custom-slider">
+                            </div>
+                        </div>
+
+                        <!-- Thông số kỹ thuật hệ thống RAG -->
+                        <div class="system-stats">
+                            <div class="stat-item">
+                                <span class="dot green"></span>
+                                <span>Reranker: <strong>BAAI/bge-reranker-v2-m3</strong></span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="dot green"></span>
+                                <span>Ollama API: <strong>tail36da8e.ts.net:11434</strong></span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="dot green"></span>
+                                <span>Embedding: <strong>BGE-M3 (1024 dims)</strong></span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="dot green"></span>
+                                <span>BM25 DB: <strong>PostgreSQL Neon (Cloud)</strong></span>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- KHUNG TIN NHẮN RAG CHÍNH -->
+                    <div class="chat-main">
+                        <!-- Mobile bar hiển thị nút mở chọn tài liệu trên điện thoại -->
+                        <div class="chat-mobile-bar">
+                            <button type="button" id="mobile-rag-sidebar-toggle" class="btn btn-secondary btn-xs">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                                <span>📚 Chọn Tài Liệu (<strong id="mobile-selected-count">0</strong>)</span>
+                            </button>
+                            <span class="mobile-rag-status"><span class="dot green"></span> RAG Multimodal</span>
+                        </div>
+
+                        <div id="rag-messages-container" class="messages-container">
+                            <div class="message bot">
+                                <div class="avatar bot-avatar">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L15 9L22 12L15 15L12 22L9 15L2 12L9 9Z"></path></svg>
+                                </div>
+                                <div class="message-content">
+                                    <div class="message-sender-title">
+                                        <span class="sender-name">HPU2 AI Assistant</span>
+                                        <span class="sender-badge rag">📚 Chế Độ RAG</span>
+                                    </div>
+                                    <div class="content">
+                                        <p>Chào bạn! Đây là không gian <strong>Hỏi Đáp & Tra Cứu Tài Liệu (RAG)</strong> chuyên biệt.</p>
+                                        <p>Tính năng cốt lõi đã kích hoạt:</p>
+                                        <ul>
+                                            <li><strong>Đa Tài Liệu</strong>: Tích chọn 1 hoặc nhiều tài liệu cùng lúc ở thanh bên trái.</li>
+                                            <li><strong>Hybrid Search</strong>: Kết hợp Vector Embeddings (BGE-M3) + BM25Okapi trên PostgreSQL Neon.</li>
+                                            <li><strong>BGE Reranker v2-m3</strong>: Chấm điểm và lọc các đoạn văn bản chính xác nhất.</li>
+                                            <li><strong>Multimodal RAG</strong>: Tự động trích xuất và hiển thị hình ảnh liên quan từ kho dữ liệu!</li>
+                                        </ul>
+                                        <p>Hãy tích chọn tài liệu ở bên trái và nhập câu hỏi để bắt đầu!</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- KHUNG NHẬP LIỆU RAG (ĐẨY BỘ CHỌN MÔ HÌNH VÀ THUẬT TOÁN XUỐNG DƯỚI) -->
+                        <div class="chat-bottom-dock">
+                            <!-- Thanh điều khiển mô hình & thuật toán RAG -->
+                            <div class="dock-controls-bar">
+                                <div class="dock-model-picker">
+                                    <span class="dock-label">🤖 Mô hình:</span>
+                                    <select id="select-model-rag" class="dock-select">
+                                        <option value="qwen2.5:14b" selected>Qwen 2.5 14B (Mặc định - Thông minh, Tiếng Việt chuẩn)</option>
+                                        <option value="qwen2.5vl:7b">Qwen 2.5-VL 7B (Đa phương thức & Thị giác Multimodal)</option>
+                                        <option value="qwen2.5:32b">Qwen 2.5 32B (Mô hình lớn, Suy luận chuyên sâu)</option>
+                                        <option value="deepseek-r1:8b">DeepSeek R1 8B (Suy luận logic & CoT Reasoning)</option>
+                                        <option value="llama3.1:latest">Llama 3.1 8B (Meta AI)</option>
+                                        <option value="llama3.2:latest">Llama 3.2 (Gọn nhẹ & Tốc độ cao)</option>
+                                        <option value="glm-4.7-flash:latest">GLM 4.7 Flash (Tốc độ phản hồi cực nhanh)</option>
+                                        <option value="granite3.2-vision:latest">IBM Granite 3.2 Vision (Nhận diện hình ảnh)</option>
+                                        <option value="mistral:latest">Mistral 7B (Đa dụng)</option>
+                                        <option value="deepseek-coder:6.7b">DeepSeek Coder 6.7B (Chuyên lập trình)</option>
+                                    </select>
+                                </div>
+
+                                <div class="dock-rag-modes">
+                                    <label class="pill-radio" title="Hybrid Search kết hợp Vector và BM25, lọc qua BGE-Reranker-v2-m3">
+                                        <input type="radio" name="rag-mode" value="rag_rerank" checked>
+                                        <span>🎯 RAG + Reranker</span>
+                                    </label>
+                                    <label class="pill-radio" title="Tìm kiếm kết hợp Vector bge-m3 và BM25Okapi">
+                                        <input type="radio" name="rag-mode" value="hybrid">
+                                        <span>🔍 Hybrid Search</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Dải xem trước ảnh đính kèm (RAG Chat) -->
+                            <div id="rag-attached-preview" class="attached-images-bar" style="display: none;"></div>
+
+                            <!-- Hộp nhập câu hỏi RAG -->
+                            <div class="dock-input-wrapper">
+                                <input type="file" id="rag-image-file-input" accept="image/png, image/jpeg, image/webp" multiple style="display: none;">
+                                <button type="button" id="rag-attach-img-btn" class="dock-tool-btn" title="Đính kèm ảnh minh họa hoặc sơ đồ vào câu hỏi RAG (hoặc dán Ctrl+V)">
+                                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                </button>
+                                <textarea id="rag-chat-input" placeholder="Đặt câu hỏi cần tra cứu từ các tài liệu đã chọn (hỗ trợ đính kèm ảnh, Shift+Enter xuống dòng)..." rows="1"></textarea>
+                                <button id="rag-chat-send-btn" class="dock-send-btn" title="Gửi câu hỏi RAG">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ======================================================== -->
+            <!-- TAB 3: OCR & BÓC TÁCH CÔNG THỨC TOÁN -->
+            <!-- ======================================================== -->
+            <section id="tab-ocr" class="tab-content">
+                <div class="ocr-container">
+                    <div class="ocr-left-panel custom-scrollbar">
+                        <div class="ocr-panel-header">
+                            <h2>📐 Trích Xuất Tài Liệu & Công Thức Toán (LaTeX)</h2>
+                            <p class="subtitle">Phân tích bố cục thông minh (YOLO Router) • Bóc tách công thức toán (Pix2Text & LatexOCR) • Sửa lỗi tiếng Việt bằng AI Local.</p>
+                        </div>
+
+                        <!-- Dropzone -->
+                        <div id="ocr-dropzone" class="dropzone">
+                            <input type="file" id="ocr-file-input" accept=".pdf, .png, .jpg, .jpeg, .webp" style="display: none;">
+                            <div class="dropzone-content">
+                                <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                <h4>Kéo thả hoặc nhấp để chọn file PDF / Hình ảnh</h4>
+                                <p>Hỗ trợ sách toán, đề thi 2 cột, bài báo IEEE, hình ảnh công thức...</p>
+                            </div>
+                        </div>
+
+                        <!-- File Selected Card -->
+                        <div id="file-selected-card" class="file-card" style="display: none;">
+                            <div class="file-info">
+                                <span class="file-name" id="selected-file-name">document.pdf</span>
+                                <span class="file-size" id="selected-file-size">0 KB</span>
+                            </div>
+                            <button id="start-ocr-btn" class="btn btn-primary">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                <span>Bắt đầu Quét & OCR</span>
+                            </button>
+                        </div>
+
+                        <!-- OCR Settings Card (Từ hệ thống cũ) -->
+                        <div class="card ocr-config-card" style="margin-top: 0.5rem; padding: 1.15rem;">
+                            <h4 style="font-size: 0.92rem; font-weight: 700; margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary);">
+                                <i class="fas fa-sliders-h" style="color: var(--primary);"></i> Cấu Hình Quét & Điều Phối (YOLO Router)
+                            </h4>
+
+                            <!-- Layout Reading Order -->
+                            <div class="form-group" style="margin-bottom: 0.85rem;">
+                                <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.35rem;">
+                                    Bố cục đọc tài liệu:
+                                </label>
+                                <div class="radio-pill-group" style="display: flex; flex-direction: column; gap: 0.4rem;">
+                                    <label class="radio-pill" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; cursor: pointer; padding: 0.4rem 0.6rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-surface-elevated);">
+                                        <input type="radio" name="ocr_layout" value="two_column" checked>
+                                        <span>🗞️ IEEE 2 Cột (Đề thi / Bài báo khoa học)</span>
+                                    </label>
+                                    <label class="radio-pill" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; cursor: pointer; padding: 0.4rem 0.6rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-surface-elevated);">
+                                        <input type="radio" name="ocr_layout" value="single_column">
+                                        <span>📄 Văn xuôi 1 Cột (Sách / Tài liệu thường)</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Language & Output Format -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; margin-bottom: 0.85rem;">
+                                <div class="form-group">
+                                    <label for="ocr-language-select" style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 0.2rem;">Ngôn ngữ:</label>
+                                    <select id="ocr-language-select" class="custom-select" style="font-size: 0.8rem; padding: 0.4rem 0.5rem; width: 100%;">
+                                        <option value="vi,en" selected>Tiếng Việt + Anh</option>
+                                        <option value="en">Tiếng Anh</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="ocr-format-select" style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 0.2rem;">Định dạng xuất:</label>
+                                    <select id="ocr-format-select" class="custom-select" style="font-size: 0.8rem; padding: 0.4rem 0.5rem; width: 100%;">
+                                        <option value="markdown" selected>Markdown (RAG)</option>
+                                        <option value="pure_latex_article">Thuần LaTeX (Article)</option>
+                                        <option value="pure_latex_ieee">Thuần LaTeX (IEEEtran)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Confidence Threshold -->
+                            <div class="form-group" style="margin-bottom: 0.85rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                                    <label for="ocr-conf-slider" style="font-size: 0.78rem; font-weight: 600;">Ngưỡng tin cậy (YOLO Conf):</label>
+                                    <span id="ocr-conf-val" style="font-size: 0.8rem; font-weight: 700; color: var(--primary);">0.25</span>
+                                </div>
+                                <input type="range" id="ocr-conf-slider" min="0.10" max="0.80" step="0.05" value="0.25" style="width: 100%;">
+                            </div>
+
+                            <!-- Ollama AI Post-Correction -->
+                            <div class="ocr-ai-fix-box" style="padding: 0.75rem; background: var(--bg-surface-elevated); border: 1px solid var(--border-color); border-radius: 8px;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">
+                                    <input type="checkbox" id="ocr-use-ollama-check" checked>
+                                    <span>✨ Sửa lỗi & dấu tiếng Việt bằng Ollama</span>
+                                </label>
+                                <div id="ocr-model-select-wrapper" style="margin-top: 0.5rem;">
+                                    <label for="ocr-model-select" style="font-size: 0.74rem; color: var(--text-muted); display: block; margin-bottom: 0.2rem;">Mô hình AI sửa lỗi:</label>
+                                    <select id="ocr-model-select" class="custom-select" style="font-size: 0.8rem; padding: 0.35rem 0.5rem; width: 100%;">
+                                        <option value="qwen2.5:14b" selected>Qwen 2.5 14B (Tiếng Việt chuẩn)</option>
+                                        <option value="qwen2.5:32b">Qwen 2.5 32B (Suy luận sâu)</option>
+                                        <option value="llama3.1:latest">Llama 3.1 8B</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress indicator -->
+                        <div id="ocr-progress" class="ocr-progress" style="display: none;">
+                            <div class="spinner"></div>
+                            <p id="ocr-progress-text">Đang phân tích layout (YOLO Router), bóc tách công thức toán và xử lý văn bản...</p>
+                        </div>
+
+                        <!-- RAG Ingestion card -->
+                        <div id="ocr-actions-card" class="card" style="display: none; margin-top: 1rem;">
+                            <h3>Nạp Văn Bản OCR Vào Kho Tri Thức RAG</h3>
+                            <p class="helper-text">Lưu trữ toàn bộ nội dung đã quét vào CSDL để dùng cho Chat RAG:</p>
+                            <div class="form-group" style="margin-top: 0.75rem;">
+                                <label for="target-collection-input">Tên Collection:</label>
+                                <input type="text" id="target-collection-input" class="custom-input" placeholder="Ví dụ: col_toan_gtdt">
+                            </div>
+                            <button id="index-to-rag-btn" class="btn btn-primary btn-block" style="margin-top: 0.75rem;">
+                                Nạp Vào Kho RAG
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="ocr-right-panel">
+                        <div class="panel-header">
+                            <div>
+                                <h3>Kết Quả Trích Xuất</h3>
+                                <small id="ocr-doc-stats" style="color: var(--text-muted); font-size: 0.76rem;"></small>
+                            </div>
+                            <div id="result-actions-btns" class="result-actions" style="display: none;">
+                                <button id="copy-markdown-btn" class="btn btn-secondary btn-sm"><i class="far fa-copy"></i> Sao chép</button>
+                                <button id="download-json-btn" class="btn btn-secondary btn-sm"><i class="fas fa-download"></i> Tải JSON</button>
+                            </div>
+                        </div>
+
+                        <div id="ocr-empty-state" class="empty-state">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            <p>Chưa có kết quả OCR. Hãy chọn file và bấm "Bắt đầu Quét & OCR".</p>
+                        </div>
+
+                        <div id="ocr-results-content" class="results-content" style="display: none;">
+                            <div class="subtabs-nav">
+                                <button class="subtab-btn active" data-subtab="subtab-formulas">📐 Công thức Toán (<span id="total-formulas-count">0</span>)</button>
+                                <button class="subtab-btn" data-subtab="subtab-pages">🖼️ Bố cục Trang & Thứ tự đọc</button>
+                                <button class="subtab-btn" data-subtab="subtab-figures">📊 Hình vẽ & Biểu đồ (<span id="total-figures-count">0</span>)</button>
+                                <button class="subtab-btn" data-subtab="subtab-text">📝 Toàn văn Tài liệu</button>
+                            </div>
+
+                            <!-- 1. Công thức Toán (Đối chiếu ảnh crop & KaTeX) -->
+                            <div id="subtab-formulas" class="subtab-content active custom-scrollbar">
+                                <div id="formulas-list" class="formulas-list"></div>
+                            </div>
+
+                            <!-- 2. Bố cục Trang (Bounding Box + Thứ tự đọc #1, #2,...) -->
+                            <div id="subtab-pages" class="subtab-content custom-scrollbar">
+                                <div id="layout-pages-container" class="layout-pages-container"></div>
+                            </div>
+
+                            <!-- 3. Hình vẽ & Biểu đồ trích xuất -->
+                            <div id="subtab-figures" class="subtab-content custom-scrollbar">
+                                <div id="figures-list" class="figures-gallery-grid"></div>
+                            </div>
+
+                            <!-- 4. Toàn văn Tài liệu (Có nút switch Bản gốc OCR / Bản AI tối ưu) -->
+                            <div id="subtab-text" class="subtab-content custom-scrollbar">
+                                <div id="text-version-toggle-bar" style="display: none; margin-bottom: 1rem; align-items: center; justify-content: space-between; padding: 0.6rem 0.85rem; background: var(--bg-surface-elevated); border: 1px solid var(--border-color); border-radius: 8px;">
+                                    <div style="font-size: 0.82rem; font-weight: 600; color: var(--primary);">
+                                        <i class="fas fa-sparkles"></i> Đã tối ưu hóa bằng AI Ollama
+                                    </div>
+                                    <div class="btn-group" style="display: flex; gap: 0.4rem;">
+                                        <button type="button" id="btn-show-ai-text" class="btn btn-primary btn-xs active">Bản AI Tối ưu</button>
+                                        <button type="button" id="btn-show-raw-text" class="btn btn-secondary btn-xs">Bản OCR Gốc</button>
+                                    </div>
+                                </div>
+                                <div id="extracted-text-view" class="markdown-preview"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ======================================================== -->
+            <!-- TAB 4: KHO & QUẢN LÝ TÀI LIỆU -->
+            <!-- ======================================================== -->
+            <section id="tab-documents" class="tab-content">
+                <div class="docs-container">
+                    <div class="docs-list-panel">
+                        <div class="panel-header">
+                            <div>
+                                <h3>Kho Tri Thức & Tài Liệu</h3>
+                                <small style="color: var(--text-muted); font-size: 0.75rem;">Người dùng quản lý tài liệu riêng; Admin quản trị toàn bộ hệ thống</small>
+                            </div>
+                            <div class="table-batch-actions">
+                                <button id="open-upload-modal-btn" class="btn btn-primary btn-sm">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    <span>Tải Lên Tài Liệu</span>
+                                </button>
+                                <select id="admin-user-filter" class="custom-select" style="display: none; width: auto; font-size: 0.8rem; padding: 0.35rem 0.6rem;">
+                                    <option value="all">Tất cả người dùng</option>
+                                </select>
+                                <button id="chat-with-selected-docs-btn" class="btn btn-secondary btn-sm" disabled>
+                                    💬 Hỏi Đáp RAG (<span id="batch-selected-count">0</span>)
+                                </button>
+                                <button id="refresh-docs-btn" class="btn btn-secondary btn-sm" title="Làm mới danh sách">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="documents-table-wrap" class="documents-table-wrap">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 36px;"><input type="checkbox" id="check-all-docs-table" title="Chọn tất cả"></th>
+                                        <th>Tên Tài Liệu</th>
+                                        <th>Collection</th>
+                                        <th>Người Tải</th>
+                                        <th>Dung Lượng</th>
+                                        <th>Thời Gian</th>
+                                        <th>Hành Động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="docs-tbody">
+                                    <!-- Injected by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="doc-viewer-panel">
+                        <div class="panel-header">
+                            <h3 id="viewer-title">Trình Xem Tài Liệu</h3>
+                            <div class="viewer-actions-top">
+                                <button id="chat-with-this-doc-btn" class="btn btn-primary btn-sm" style="display: none;">
+                                    💬 Hỏi đáp RAG với tài liệu này
+                                </button>
+                            </div>
+                        </div>
+                        <div id="viewer-content" class="viewer-content">
+                            <!-- Placeholder khi chưa chọn -->
+                            <div class="viewer-placeholder">
+                                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                <h4>Chưa chọn tài liệu nào</h4>
+                                <p>Nhấp vào nút <strong>"Xem"</strong> ở bất kỳ tài liệu nào bên trái để xem toàn bộ nội dung PDF lưu trong CSDL Neon DB.</p>
+                            </div>
+
+                            <!-- Spinner khi đang tải -->
+                            <div id="doc-viewer-loading" class="doc-viewer-loading" style="display: none;">
+                                <div class="spinner"></div>
+                                <p>Đang tải nội dung văn bản từ Neon DB...</p>
+                            </div>
+
+                            <!-- Khung xem nội dung văn bản từ Neon DB -->
+                            <div id="doc-text-reader" class="doc-text-reader" style="display: none;">
+                                <div class="reader-meta-bar">
+                                    <div class="reader-meta-tags">
+                                        <span class="meta-tag col">📚 Collection: <strong id="reader-col-name">-</strong></span>
+                                        <span class="meta-tag user" id="reader-uploader-tag">👤 system</span>
+                                        <span class="meta-tag stats" id="reader-stats-tag">📊 0 ký tự (~0 từ)</span>
+                                        <span class="meta-tag date" id="reader-date-tag">🕒 -</span>
+                                    </div>
+                                    <div class="reader-tools">
+                                        <div id="viewer-mode-toggle" class="viewer-mode-toggle" style="display: none;">
+                                            <button type="button" id="toggle-view-text-btn" class="toggle-mode-btn active">📄 Văn Bản (Neon DB)</button>
+                                            <button type="button" id="toggle-view-pdf-btn" class="toggle-mode-btn">📑 File Gốc</button>
+                                        </div>
+                                        <button type="button" id="copy-doc-text-btn" class="btn btn-secondary btn-xs" title="Sao chép toàn bộ nội dung">
+                                            📋 Sao chép
+                                        </button>
+                                        <button type="button" id="download-doc-text-btn" class="btn btn-secondary btn-xs" title="Tải file văn bản .txt">
+                                            📥 Tải .txt
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="reader-search-wrap">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                    <input type="text" id="reader-search-input" placeholder="Tìm kiếm từ khóa trong tài liệu này...">
+                                    <span id="reader-search-count" class="reader-search-count"></span>
+                                </div>
+
+                                <div id="reader-body-text" class="reader-body-text"></div>
+                            </div>
+
+                            <iframe id="pdf-viewer-frame" style="display: none; width: 100%; height: 100%; border: none; border-radius: 8px;"></iframe>
+                            <img id="image-viewer-frame" style="display: none; max-width: 100%; max-height: 100%; object-fit: contain; margin: auto;">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ======================================================== -->
+            <!-- TAB 5: OFFICE STUDIO AI (TẠO, SỬA & ĐÁNH GIÁ TÀI LIỆU OFFICE) -->
+            <!-- ======================================================== -->
+            <section id="tab-office" class="tab-content">
+                <div class="office-studio-container">
+                    <!-- Office Header & Sub-Nav Modes -->
+                    <div class="office-header-bar">
+                        <div class="office-header-info">
+                            <div class="office-title-row">
+                                <span class="office-main-icon">📑</span>
+                                <div>
+                                    <h2>Office Studio AI</h2>
+                                    <p>Tạo mới, chỉnh sửa và chấm điểm tài liệu Word, Excel, PowerPoint chuyên nghiệp với mô hình Ollama Local.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="office-subnav-pills">
+                            <button type="button" class="office-pill-btn active" data-office-mode="generate">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
+                                <span>Tạo Mới Văn Bản</span>
+                            </button>
+                            <button type="button" class="office-pill-btn" data-office-mode="edit">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                <span>Chỉnh Sửa & Tối Ưu</span>
+                            </button>
+                            <button type="button" class="office-pill-btn" data-office-mode="evaluate">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline><path d="M16 16l4-4"></path></svg>
+                                <span>Chấm Điểm Đối Chiếu</span>
+                            </button>
+                            <button type="button" class="office-pill-btn" data-office-mode="files">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                                <span>Tệp Đã Tạo</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SUB-PANEL 1: TẠO MỚI TÀI LIỆU (GENERATE) -->
+                    <div id="office-panel-generate" class="office-subpanel active">
+                        <div class="office-grid-layout">
+                            <div class="office-form-card">
+                                <h3 class="office-card-title">1. Chọn Định Dạng Cần Tạo</h3>
+                                <div class="office-type-selector">
+                                    <label class="office-type-card active" data-type="docx">
+                                        <input type="radio" name="office-doc-type" value="docx" checked style="display:none;">
+                                        <div class="type-icon word-icon">📘</div>
+                                        <div class="type-text">
+                                            <strong>Word (.docx)</strong>
+                                            <span>Biên bản, Hợp đồng, Tờ trình</span>
+                                        </div>
+                                    </label>
+                                    <label class="office-type-card" data-type="xlsx">
+                                        <input type="radio" name="office-doc-type" value="xlsx" style="display:none;">
+                                        <div class="type-icon excel-icon">📗</div>
+                                        <div class="type-text">
+                                            <strong>Excel (.xlsx)</strong>
+                                            <span>Bảng tính, Thống kê, Công thức</span>
+                                        </div>
+                                    </label>
+                                    <label class="office-type-card" data-type="pptx">
+                                        <input type="radio" name="office-doc-type" value="pptx" style="display:none;">
+                                        <div class="type-icon ppt-icon">📙</div>
+                                        <div class="type-text">
+                                            <strong>PowerPoint (.pptx)</strong>
+                                            <span>Bài thuyết trình màn hình 16:9</span>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <h3 class="office-card-title" style="margin-top: 20px;">2. Yêu Cầu Soạn Thảo (Prompt)</h3>
+                                <div class="office-prompt-wrap">
+                                    <textarea id="office-gen-prompt" rows="5" class="form-control office-textarea" placeholder="Nhập chi tiết yêu cầu soạn thảo (Ví dụ: Soạn thảo Hợp đồng cung cấp dịch vụ phần mềm giữa Công ty A và Công ty B gồm 8 điều khoản, thời hạn 1 năm...)"></textarea>
+                                    <div class="office-quick-prompts">
+                                        <span class="quick-label">💡 Gợi ý nhanh:</span>
+                                        <button type="button" class="office-chip" data-target="docx" data-text="Soạn thảo Biên bản cuộc họp giao ban đầu tuần của Ban Giám đốc, gồm thành phần tham dự, nội dung đánh giá và bảng phân công nhiệm vụ cụ thể.">Biên bản họp giao ban</button>
+                                        <button type="button" class="office-chip" data-target="docx" data-text="Soạn thảo Hợp đồng dịch vụ bảo trì phần mềm và hệ thống máy chủ, bao gồm các điều khoản thanh toán, bảo mật thông tin và bồi thường thiệt hại.">Hợp đồng dịch vụ bảo trì</button>
+                                        <button type="button" class="office-chip" data-target="xlsx" data-text="Tạo Bảng tính lương và thưởng tháng cho 10 nhân viên, bao gồm lương cơ bản, ngày công, phụ cấp, thưởng KPI, bảo hiểm và công thức thực lĩnh.">Bảng tính lương thưởng (Excel)</button>
+                                        <button type="button" class="office-chip" data-target="pptx" data-text="Thiết kế slide thuyết trình Kế hoạch Chuyển đổi số và Ứng dụng Trí tuệ Nhân tạo trong Doanh nghiệp năm 2026 gồm 6 slide súc tích và hiện đại.">Slide Chuyển đổi số AI</button>
+                                    </div>
+                                </div>
+
+                                <!-- 3. Cấu hình Soạn thảo Thông minh (Mô hình AI & Phong cách văn bản) -->
+                                <div class="office-settings-deck">
+                                    <!-- Cột 1: Mô hình AI -->
+                                    <div class="office-setting-col">
+                                        <label class="office-setting-heading">
+                                            <span>🤖</span>
+                                            <span>Mô Hình AI Soạn Thảo:</span>
+                                        </label>
+                                        <input type="hidden" id="office-gen-model" value="qwen2.5:14b">
+                                        <div class="office-model-pill-grid" data-target="office-gen-model">
+                                            <div class="office-model-pill active" data-model="qwen2.5:14b">
+                                                <span class="pill-icon">⚡</span>
+                                                <div class="pill-info">
+                                                    <div class="pill-title-row">
+                                                        <strong>Qwen 2.5 14B</strong>
+                                                        <span class="pill-badge badge-rec">Khuyên dùng</span>
+                                                    </div>
+                                                    <span class="pill-sub">Chuẩn hành chính tiếng Việt & thể thức</span>
+                                                </div>
+                                                <span class="pill-check">✓</span>
+                                            </div>
+                                            <div class="office-model-pill" data-model="deepseek-r1:8b">
+                                                <span class="pill-icon">🧠</span>
+                                                <div class="pill-info">
+                                                    <div class="pill-title-row">
+                                                        <strong>DeepSeek R1 8B</strong>
+                                                        <span class="pill-badge badge-cot">CoT Suy Luận</span>
+                                                    </div>
+                                                    <span class="pill-sub">Tư duy logic từng bước, chặt chẽ</span>
+                                                </div>
+                                                <span class="pill-check">✓</span>
+                                            </div>
+                                            <div class="office-model-pill" data-model="qwen2.5:32b">
+                                                <span class="pill-icon">🚀</span>
+                                                <div class="pill-info">
+                                                    <div class="pill-title-row">
+                                                        <strong>Qwen 2.5 32B</strong>
+                                                        <span class="pill-badge badge-pro">Chuyên Gia</span>
+                                                    </div>
+                                                    <span class="pill-sub">Tài liệu quy mô lớn, thuật ngữ sâu</span>
+                                                </div>
+                                                <span class="pill-check">✓</span>
+                                            </div>
+                                            <div class="office-model-pill" data-model="deepseek-coder:6.7b">
+                                                <span class="pill-icon">💻</span>
+                                                <div class="pill-info">
+                                                    <div class="pill-title-row">
+                                                        <strong>DeepSeek Coder</strong>
+                                                        <span class="pill-badge badge-code">Excel / Hàm</span>
+                                                    </div>
+                                                    <span class="pill-sub">Tối ưu công thức và ma trận bảng biểu</span>
+                                                </div>
+                                                <span class="pill-check">✓</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Cột 2: Phong cách & Thể thức văn bản -->
+                                    <div class="office-setting-col">
+                                        <label class="office-setting-heading">
+                                            <span>🎨</span>
+                                            <span>Phong Cách & Thể Thức:</span>
+                                        </label>
+                                        <input type="hidden" id="office-gen-style" value="standard">
+                                        <div class="office-style-pill-grid" data-target="office-gen-style">
+                                            <div class="office-style-pill active" data-style="standard" title="Văn bản hành chính chuẩn Nghị định 30/2020/NĐ-CP">
+                                                <span class="pill-icon">🏛️</span>
+                                                <div class="pill-info">
+                                                    <div class="pill-title-row">
+                                                        <strong>Hành chính chuẩn mực</strong>
+                                                        <span class="pill-badge badge-gov">NĐ 30/2020</span>
+                                                    </div>
+                                                    <span class="pill-sub">Quốc hiệu, trích yếu, điều khoản, chữ ký</span>
+                                                </div>
+                                                <span class="pill-check">✓</span>
+                                            </div>
+                                            <div class="office-style-pill" data-style="corporate" title="Doanh nghiệp chuyên nghiệp & thương mại">
+                                                <span class="pill-icon">💼</span>
+                                                <div class="pill-info">
+                                                    <div class="pill-title-row">
+                                                        <strong>Doanh nghiệp & Hợp đồng</strong>
+                                                        <span class="pill-badge badge-corp">Thương mại</span>
+                                                    </div>
+                                                    <span class="pill-sub">Điều khoản chặt chẽ, thanh toán, bảo mật</span>
+                                                </div>
+                                                <span class="pill-check">✓</span>
+                                            </div>
+                                            <div class="office-style-pill" data-style="academic" title="Học thuật, giáo dục & nghiên cứu">
+                                                <span class="pill-icon">🎓</span>
+                                                <div class="pill-info">
+                                                    <div class="pill-title-row">
+                                                        <strong>Giáo dục & Học thuật</strong>
+                                                        <span class="pill-badge badge-acad">Nghiên cứu</span>
+                                                    </div>
+                                                    <span class="pill-sub">Đề tài NCKH, giáo án, trích dẫn học thuật</span>
+                                                </div>
+                                                <span class="pill-check">✓</span>
+                                            </div>
+                                            <div class="office-style-pill" data-style="modern" title="Hiện đại, súc tích và tập trung dữ liệu">
+                                                <span class="pill-icon">⚡</span>
+                                                <div class="pill-info">
+                                                    <div class="pill-title-row">
+                                                        <strong>Hiện đại & Súc tích</strong>
+                                                        <span class="pill-badge badge-modern">Executive</span>
+                                                    </div>
+                                                    <span class="pill-sub">Bullet points ngắn gọn, nổi bật chỉ số KPI</span>
+                                                </div>
+                                                <span class="pill-check">✓</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="button" id="office-gen-submit-btn" class="btn btn-primary btn-block office-btn-large">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+                                    <span>Tạo Tài Liệu Ngay</span>
+                                </button>
+                            </div>
+
+                            <!-- Right Result Card -->
+                            <div class="office-result-card">
+                                <h3 class="office-card-title">Kết Quả Tài Liệu Được Tạo</h3>
+                                <div id="office-gen-result-placeholder" class="office-result-placeholder">
+                                    <div class="placeholder-icon">📄</div>
+                                    <h4>Chưa có tài liệu nào được tạo</h4>
+                                    <p>Chọn định dạng và nhập yêu cầu soạn thảo ở cột bên trái, AI sẽ phân tích và tạo tệp Office hoàn chỉnh cho bạn.</p>
+                                </div>
+
+                                <div id="office-gen-loading" class="office-loading-box" style="display: none;">
+                                    <div class="spinner"></div>
+                                    <h4>Đang xử lý và soạn thảo tài liệu...</h4>
+                                    <p id="office-gen-loading-status">Mô hình Ollama đang phân tích cấu trúc văn bản...</p>
+                                </div>
+
+                                <div id="office-gen-success-box" class="office-success-box" style="display: none;">
+                                    <div class="success-file-card">
+                                        <div class="success-file-header">
+                                            <div class="file-icon-badge" id="office-gen-badge-icon">📘</div>
+                                            <div class="file-details">
+                                                <h4 id="office-gen-file-title">TaiLieu_20261015.docx</h4>
+                                                <div class="file-meta">
+                                                    <span id="office-gen-file-size">0 KB</span> • 
+                                                    <span id="office-gen-file-type">DOCX</span> • 
+                                                    <span class="file-status-tag">Sẵn sàng</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="office-success-actions">
+                                            <button type="button" id="office-gen-preview-btn" class="office-preview-action" title="Xem trước tài liệu trực tiếp trên trình duyệt">
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                                <span>Xem Trước Trực Tuyến</span>
+                                            </button>
+                                            <a id="office-gen-download-btn" href="#" class="office-download-action" download>
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                                <span>Tải Tệp Về Máy</span>
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    <div class="office-preview-wrap">
+                                        <div class="preview-header">
+                                            <div style="display: flex; align-items: center; gap: 0.45rem;">
+                                                <span>👁️</span>
+                                                <strong>Nội dung tóm tắt sơ bộ</strong>
+                                            </div>
+                                            <span class="preview-header-tag">Bản xem nhanh</span>
+                                        </div>
+                                        <div id="office-gen-preview-content" class="office-preview-body custom-scrollbar"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUB-PANEL 2: CHỈNH SỬA & TỐI ƯU FILE (EDIT) -->
+                    <div id="office-panel-edit" class="office-subpanel" style="display: none;">
+                        <div class="office-grid-layout">
+                            <div class="office-form-card">
+                                <h3 class="office-card-title">1. Tải Lên File Cần Chỉnh Sửa</h3>
+                                <div class="office-dropzone" id="office-edit-dropzone">
+                                    <input type="file" id="office-edit-file-input" accept=".docx,.xlsx,.xls,.pptx,.ppt,.pdf,.txt" style="display: none;">
+                                    <div class="dropzone-inner">
+                                        <div class="drop-icon">📤</div>
+                                        <h4>Kéo thả file vào đây hoặc <span class="browse-link">chọn từ máy tính</span></h4>
+                                        <p class="drop-hint">Hỗ trợ các định dạng: Word (.docx), Excel (.xlsx), PowerPoint (.pptx), PDF</p>
+                                    </div>
+                                    <div id="office-edit-selected-file" class="selected-file-badge" style="display: none;">
+                                        <span class="file-chip-icon">📎</span>
+                                        <span id="office-edit-filename" class="file-chip-name">filename.docx</span>
+                                        <button type="button" id="office-edit-file-clear" class="file-chip-remove">✕</button>
+                                    </div>
+                                </div>
+
+                                <h3 class="office-card-title" style="margin-top: 20px;">2. Hướng Dẫn & Yêu Cầu Chỉnh Sửa</h3>
+                                <textarea id="office-edit-prompt" rows="4" class="form-control office-textarea" placeholder="Ví dụ: Rà soát và sửa toàn bộ lỗi chính tả, bổ sung thêm điều khoản bảo mật thông tin, thêm cột Xếp loại học lực vào bảng tính và viết công thức..."></textarea>
+
+                                <div class="office-setting-col" style="margin-top: 14px;">
+                                    <label class="office-setting-heading">
+                                        <span>🤖</span>
+                                        <span>Mô Hình AI Hiệu Đính:</span>
+                                    </label>
+                                    <input type="hidden" id="office-edit-model" value="qwen2.5:14b">
+                                    <div class="office-model-pill-grid" data-target="office-edit-model">
+                                        <div class="office-model-pill active" data-model="qwen2.5:14b">
+                                            <span class="pill-icon">⚡</span>
+                                            <div class="pill-info">
+                                                <div class="pill-title-row">
+                                                    <strong>Qwen 2.5 14B</strong>
+                                                    <span class="pill-badge badge-rec">Khuyên dùng</span>
+                                                </div>
+                                                <span class="pill-sub">Sửa lỗi chính tả, chuẩn hóa văn phong và tái cấu trúc</span>
+                                            </div>
+                                            <span class="pill-check">✓</span>
+                                        </div>
+                                        <div class="office-model-pill" data-model="deepseek-r1:8b">
+                                            <span class="pill-icon">🧠</span>
+                                            <div class="pill-info">
+                                                <div class="pill-title-row">
+                                                    <strong>DeepSeek R1 8B</strong>
+                                                    <span class="pill-badge badge-cot">CoT Suy Luận</span>
+                                                </div>
+                                                <span class="pill-sub">Hiệu đính logic điều khoản, rà soát lỗ hổng văn bản</span>
+                                            </div>
+                                            <span class="pill-check">✓</span>
+                                        </div>
+                                        <div class="office-model-pill" data-model="qwen2.5:32b">
+                                            <span class="pill-icon">🚀</span>
+                                            <div class="pill-info">
+                                                <div class="pill-title-row">
+                                                    <strong>Qwen 2.5 32B</strong>
+                                                    <span class="pill-badge badge-pro">Chuyên Gia</span>
+                                                </div>
+                                                <span class="pill-sub">Sửa đổi chuyên sâu, bảo toàn thuật ngữ chuyên ngành</span>
+                                            </div>
+                                            <span class="pill-check">✓</span>
+                                        </div>
+                                        <div class="office-model-pill" data-model="deepseek-coder:6.7b">
+                                            <span class="pill-icon">💻</span>
+                                            <div class="pill-info">
+                                                <div class="pill-title-row">
+                                                    <strong>DeepSeek Coder</strong>
+                                                    <span class="pill-badge badge-code">Excel & Hàm</span>
+                                                </div>
+                                                <span class="pill-sub">Sửa và tối ưu hóa công thức, hàm điều kiện, ma trận bảng</span>
+                                            </div>
+                                            <span class="pill-check">✓</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="button" id="office-edit-submit-btn" class="btn btn-primary btn-block office-btn-large" style="margin-top: 20px;">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                                    <span>Tiến Hành Sửa & Cải Thiện</span>
+                                </button>
+                            </div>
+
+                            <!-- Right Result Card -->
+                            <div class="office-result-card">
+                                <h3 class="office-card-title">Kết Quả Hiệu Đính & Sửa Đổi</h3>
+                                <div id="office-edit-result-placeholder" class="office-result-placeholder">
+                                    <div class="placeholder-icon">✏️</div>
+                                    <h4>Chưa có file nào được chỉnh sửa</h4>
+                                    <p>Tải lên file văn phòng cần sửa đổi và nhập yêu cầu để AI bắt đầu rà soát và tạo phiên bản hoàn chỉnh mới.</p>
+                                </div>
+
+                                <div id="office-edit-loading" class="office-loading-box" style="display: none;">
+                                    <div class="spinner"></div>
+                                    <h4>Đang đọc nội dung và tiến hành sửa đổi...</h4>
+                                    <p>AI đang phân tích các đoạn văn bản và áp dụng các chỉnh sửa...</p>
+                                </div>
+
+                                <div id="office-edit-success-box" class="office-success-box" style="display: none;">
+                                    <div class="success-file-card">
+                                        <div class="success-file-header">
+                                            <div class="file-icon-badge">✨</div>
+                                            <div class="file-details">
+                                                <h4 id="office-edit-res-title">File_da_sua.docx</h4>
+                                                <div class="file-meta"><span class="file-status-tag">Đã hoàn tất hiệu đính</span></div>
+                                            </div>
+                                        </div>
+                                        <div class="office-success-actions">
+                                            <button type="button" id="office-edit-preview-btn" class="office-preview-action" title="Xem trước tài liệu đã sửa trực tiếp trên trình duyệt">
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                                <span>Xem Trước Trực Tuyến</span>
+                                            </button>
+                                            <a id="office-edit-download-btn" href="#" class="office-download-action" download>
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                                <span>Tải File Đã Sửa</span>
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    <div class="office-changelog-card">
+                                        <h4>📋 Tóm tắt các điểm đã sửa đổi (Changelog):</h4>
+                                        <ul id="office-edit-changelog-list" class="changelog-list"></ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUB-PANEL 3: CHẤM ĐIỂM & ĐỐI CHIẾU ĐÁP ÁN MẪU (EVALUATE) -->
+                    <div id="office-panel-evaluate" class="office-subpanel" style="display: none;">
+                        <div class="office-eval-container">
+                            <div class="office-eval-header-card">
+                                <div class="eval-grid-two">
+                                    <!-- Cột 1: File Bài Làm -->
+                                    <div class="eval-drop-box">
+                                        <h4>1. File Bài Làm Của Thí Sinh / Bài Nộp</h4>
+                                        <div class="office-dropzone-sm" id="office-eval-sub-dropzone">
+                                            <input type="file" id="office-eval-sub-input" accept=".docx,.xlsx,.pptx,.pdf,.txt" style="display: none;">
+                                            <div class="dropzone-inner-sm">
+                                                <span class="drop-icon-sm">📝</span>
+                                                <span class="drop-label-sm">Chọn file bài nộp (.docx, .xlsx, .pptx, .pdf)</span>
+                                            </div>
+                                            <div id="office-eval-sub-badge" class="selected-file-badge-sm" style="display: none;">
+                                                <span class="file-chip-name" id="office-eval-sub-name">bainop.docx</span>
+                                                <button type="button" id="office-eval-sub-clear" class="file-chip-remove">✕</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Cột 2: File Đáp Án Mẫu -->
+                                    <div class="eval-drop-box">
+                                        <h4>2. File Đáp Án Chuẩn / Barem Tiêu Chí</h4>
+                                        <div class="office-dropzone-sm" id="office-eval-ans-dropzone">
+                                            <input type="file" id="office-eval-ans-input" accept=".docx,.xlsx,.pptx,.pdf,.txt" style="display: none;">
+                                            <div class="dropzone-inner-sm">
+                                                <span class="drop-icon-sm">🎯</span>
+                                                <span class="drop-label-sm">Chọn file đáp án mẫu / barem điểm</span>
+                                            </div>
+                                            <div id="office-eval-ans-badge" class="selected-file-badge-sm" style="display: none;">
+                                                <span class="file-chip-name" id="office-eval-ans-name">dapan.docx</span>
+                                                <button type="button" id="office-eval-ans-clear" class="file-chip-remove">✕</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="eval-controls-bar" style="flex-direction: column; align-items: stretch; gap: 14px;">
+                                    <div class="eval-notes-field">
+                                        <input type="text" id="office-eval-notes" class="form-control" placeholder="Ghi chú thêm cho giám khảo AI (Ví dụ: Thang điểm 10, khắt khe về công thức Excel, chú trọng cấu trúc văn bản...)">
+                                    </div>
+                                    <div class="office-setting-col" style="width: 100%;">
+                                        <label class="office-setting-heading">
+                                            <span>🤖</span>
+                                            <span>Giám Khảo Khảo Thí AI:</span>
+                                        </label>
+                                        <input type="hidden" id="office-eval-model" value="qwen2.5:14b">
+                                        <div class="office-model-pill-grid" data-target="office-eval-model">
+                                            <div class="office-model-pill active" data-model="qwen2.5:14b">
+                                                <span class="pill-icon">⚡</span>
+                                                <div class="pill-info">
+                                                    <div class="pill-title-row">
+                                                        <strong>Qwen 2.5 14B</strong>
+                                                        <span class="pill-badge badge-rec">Khuyên dùng</span>
+                                                    </div>
+                                                    <span class="pill-sub">Chấm điểm nhanh, so khớp tiêu chí barem và phân loại lỗi</span>
+                                                </div>
+                                                <span class="pill-check">✓</span>
+                                            </div>
+                                            <div class="office-model-pill" data-model="deepseek-r1:8b">
+                                                <span class="pill-icon">🧠</span>
+                                                <div class="pill-info">
+                                                    <div class="pill-title-row">
+                                                        <strong>DeepSeek R1 8B</strong>
+                                                        <span class="pill-badge badge-cot">CoT Suy Luận</span>
+                                                    </div>
+                                                    <span class="pill-sub">Đối chiếu suy luận 2 chiều khắt khe, phân tích từng lỗi sai</span>
+                                                </div>
+                                                <span class="pill-check">✓</span>
+                                            </div>
+                                            <div class="office-model-pill" data-model="qwen2.5:32b">
+                                                <span class="pill-icon">🚀</span>
+                                                <div class="pill-info">
+                                                    <div class="pill-title-row">
+                                                        <strong>Qwen 2.5 32B</strong>
+                                                        <span class="pill-badge badge-pro">Chuyên Gia</span>
+                                                    </div>
+                                                    <span class="pill-sub">Khảo thí chuyên sâu, đánh giá học thuật và barem phức tạp</span>
+                                                </div>
+                                                <span class="pill-check">✓</span>
+                                            </div>
+                                            <div class="office-model-pill" data-model="deepseek-coder:6.7b">
+                                                <span class="pill-icon">💻</span>
+                                                <div class="pill-info">
+                                                    <div class="pill-title-row">
+                                                        <strong>DeepSeek Coder</strong>
+                                                        <span class="pill-badge badge-code">Excel / Code</span>
+                                                    </div>
+                                                    <span class="pill-sub">Chấm bài tập thực hành bảng tính, công thức dữ liệu</span>
+                                                </div>
+                                                <span class="pill-check">✓</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" id="office-eval-submit-btn" class="btn btn-primary eval-action-btn" style="padding: 0.85rem 1.5rem; font-size: 0.95rem; font-weight: 700;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                        <span>Bắt Đầu Chấm Điểm & Đối Chiếu Barem</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Evaluation Results Section -->
+                            <div id="office-eval-placeholder" class="office-result-placeholder" style="margin-top: 20px;">
+                                <div class="placeholder-icon">⚖️</div>
+                                <h4>Chưa có kết quả đánh giá</h4>
+                                <p>Tải lên File bài làm và File đáp án mẫu ở trên, sau đó nhấn <strong>"Bắt Đầu Chấm Điểm"</strong> để hệ thống phân tích đối chiếu.</p>
+                            </div>
+
+                            <div id="office-eval-loading" class="office-loading-box" style="display: none; margin-top: 20px;">
+                                <div class="spinner"></div>
+                                <h4>Hệ thống khảo thí AI đang đối chiếu bài nộp với đáp án...</h4>
+                                <p>Đang bóc tách dữ liệu 2 chiều, so khớp câu hỏi và tính toán điểm số...</p>
+                            </div>
+
+                            <div id="office-eval-results-box" class="office-eval-results-box" style="display: none;">
+                                <!-- Score Overview Hero Banner -->
+                                <div class="eval-score-hero">
+                                    <div class="eval-score-circle">
+                                        <span id="eval-score-num">8.5</span>
+                                        <span class="eval-score-max">/ <span id="eval-score-max-num">10</span></span>
+                                    </div>
+                                    <div class="eval-score-meta">
+                                        <div class="eval-badge-row">
+                                            <span id="eval-grade-badge" class="eval-grade-badge">Giỏi</span>
+                                            <span id="eval-percent-badge" class="eval-percent-badge">85% Hoàn thành</span>
+                                        </div>
+                                        <h3 id="eval-title-display">Báo Cáo Đánh Giá Và Chấm Điểm Bài Nộp</h3>
+                                        <p id="eval-summary-display" class="eval-summary-text"></p>
+                                    </div>
+                                    <div class="eval-download-action-wrap" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                                        <button type="button" id="eval-report-preview-btn" class="btn btn-primary office-preview-action" title="Xem trước báo cáo đánh giá trực tiếp trên trình duyệt">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                            <span>Xem Báo Cáo Trực Tuyến</span>
+                                        </button>
+                                        <a id="eval-report-download-btn" href="#" class="btn btn-success office-download-action" download>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                            <span>Tải Báo Cáo Đánh Giá (.docx)</span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- Criteria Breakdown Table -->
+                                <div class="eval-section-card">
+                                    <h4 class="eval-sec-title">📊 Chi Tiết Điểm Số Theo Từng Tiêu Chí</h4>
+                                    <div class="table-responsive">
+                                        <table class="table-office-eval" id="eval-criteria-table">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 50px;">STT</th>
+                                                    <th>Tiêu Chí / Câu Hỏi</th>
+                                                    <th style="width: 120px;">Điểm Đạt</th>
+                                                    <th>Nhận Xét & Đánh Giá</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="eval-criteria-tbody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Identified Errors Table -->
+                                <div class="eval-section-card" id="eval-errors-card">
+                                    <h4 class="eval-sec-title text-danger">⚠️ Danh Sách Các Lỗi Sai Phát Hiện</h4>
+                                    <div class="table-responsive">
+                                        <table class="table-office-eval" id="eval-errors-table">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 50px;">STT</th>
+                                                    <th style="width: 130px;">Vị Trí</th>
+                                                    <th style="width: 120px;">Loại Lỗi</th>
+                                                    <th>So Khớp (Bài Nộp vs Đáp Án)</th>
+                                                    <th>Giải Thích & Cách Sửa</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="eval-errors-tbody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Strengths & Recommendations -->
+                                <div class="eval-two-columns">
+                                    <div class="eval-column-card">
+                                        <h4 class="eval-sec-title text-success">🌟 Điểm Sáng / Ưu Điểm</h4>
+                                        <ul id="eval-strengths-list" class="eval-bullet-list"></ul>
+                                    </div>
+                                    <div class="eval-column-card">
+                                        <h4 class="eval-sec-title text-primary">💡 Lời Khuyên Cải Thiện</h4>
+                                        <ul id="eval-recommendations-list" class="eval-bullet-list"></ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUB-PANEL 4: DANH SÁCH FILE ĐÃ TẠO (FILES LIST) -->
+                    <div id="office-panel-files" class="office-subpanel" style="display: none;">
+                        <div class="office-files-wrapper">
+                            <div class="files-header-row">
+                                <h3>Tài Liệu Office Đã Tạo Trong Hệ Thống</h3>
+                                <button type="button" id="office-files-refresh-btn" class="btn btn-outline btn-sm">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                                    <span>Làm Mới</span>
+                                </button>
+                            </div>
+                            <div class="table-responsive" style="margin-top: 15px;">
+                                <table class="table-office-files">
+                                    <thead>
+                                        <tr>
+                                            <th>Tên Tệp</th>
+                                            <th style="width: 90px;">Định Dạng</th>
+                                            <th style="width: 110px;">Dung Lượng</th>
+                                            <th style="width: 170px;">Thời Gian Tạo</th>
+                                            <th style="width: 130px; text-align: center;">Hành Động</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="office-files-tbody">
+                                        <tr><td colspan="5" class="text-center" style="padding: 30px; color: var(--text-muted);">Đang tải danh sách tài liệu...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+        </main>
+
+        <!-- THANH BÊN LỊCH SỬ CHAT REALTIME (ĐẶT BÊN PHẢI) -->
+        <aside id="chat-history-sidebar" class="chat-history-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title-row">
+                    <div class="sidebar-heading-wrap">
+                        <span class="sidebar-icon">💬</span>
+                        <span class="sidebar-heading">Lịch Sử Trò Chuyện</span>
+                        <span id="sidebar-header-badge" class="sidebar-header-badge" title="Tổng số phiên">0</span>
+                    </div>
+                    <div class="sidebar-header-tools">
+                        <button id="sidebar-refresh-btn" class="icon-btn icon-btn-xs" title="Đồng bộ lại từ Neon DB">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                        </button>
+                        <button id="collapse-sidebar-btn" class="icon-btn icon-btn-xs" title="Thu gọn thanh bên (❯)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Nút Bắt đầu Cuộc Trò Chuyện Mới -->
+                <button id="sidebar-new-chat-btn" class="btn btn-primary btn-sm btn-block sidebar-new-chat-btn" title="Bắt đầu cuộc trò chuyện mới">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <span>Cuộc Trò Chuyện Mới</span>
+                </button>
+
+                <!-- Ô Tìm Kiếm Real-time -->
+                <div class="sidebar-search-box">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="sidebar-history-search" placeholder="Tìm kiếm hội thoại..." autocomplete="off">
+                    <button id="sidebar-search-clear" class="sidebar-search-clear" style="display: none;" title="Xóa tìm kiếm">✕</button>
+                </div>
+            </div>
+
+            <!-- Danh sách phiên hội thoại realtime -->
+            <div id="sidebar-sessions-list" class="sidebar-sessions-list custom-scrollbar">
+                <div class="sidebar-loading">
+                    <div class="spinner-sm"></div>
+                    <span>Đang tải lịch sử từ Neon DB...</span>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="neon-live-indicator">
+                    <span class="dot green"></span>
+                    <span class="neon-live-text">Neon DB Live</span>
+                </div>
+                <span id="sidebar-session-count" class="sidebar-session-count">0 phiên</span>
+            </div>
+        </aside>
+        </div>
+    </div>
+
+    <!-- CITATION MODAL -->
+    <div id="citation-modal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="citation-modal-title">Nguồn Trích Dẫn</h3>
+                <button id="close-modal-btn" class="icon-btn">&times;</button>
+            </div>
+            <div id="citation-modal-body" class="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- MULTIMODAL IMAGE PREVIEW MODAL -->
+    <div id="image-preview-modal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card modal-image-card">
+            <div class="modal-header">
+                <h3>🖼️ Hình Ảnh Trích Xuất (Multimodal RAG)</h3>
+                <button id="close-image-modal-btn" class="icon-btn">&times;</button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="enlarged-modal-img" src="" alt="Hình ảnh phóng to" style="max-width: 100%; max-height: 75vh; border-radius: 8px;">
+            </div>
+        </div>
+    </div>
+
+    <!-- UPLOAD DOCUMENT MODAL -->
+    <div id="upload-doc-modal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>➕ Tải Lên & Nạp Tài Liệu Vào RAG</h3>
+                <button id="close-upload-modal-btn" class="icon-btn">&times;</button>
+            </div>
+            <form id="upload-doc-form" class="modal-body">
+                <div class="form-group" style="margin-bottom: 0.9rem;">
+                    <label class="label-title" for="doc-file-input">Chọn File (PDF, DOCX, TXT):</label>
+                    <input type="file" id="doc-file-input" class="custom-input-file" accept=".pdf,.docx,.doc,.txt,.md" required>
+                    <small class="helper-text">Hỗ trợ giáo trình, bài giảng, văn bản pháp quy, bài tập.</small>
+                </div>
+                <div class="form-group" style="margin-bottom: 0.9rem;">
+                    <label class="label-title" for="doc-name-input">Tên Tài Liệu:</label>
+                    <input type="text" id="doc-name-input" class="custom-input" placeholder="Ví dụ: Giáo trình Tin học đại cương" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 0.9rem;">
+                    <label class="label-title" for="doc-collection-input">Tên Collection (Mã kho):</label>
+                    <input type="text" id="doc-collection-input" class="custom-input" placeholder="Ví dụ: GIAOTRINH_THDC (tự động gợi ý nếu để trống)">
+                    <small class="helper-text">Dùng để phân loại nhóm tài liệu khi Chat RAG.</small>
+                </div>
+                <div id="upload-progress-box" class="upload-progress-box" style="display: none;">
+                    <div class="spinner-sm"></div>
+                    <span id="upload-progress-text">Đang tải lên, bóc tách text và nạp vào RAG...</span>
+                </div>
+                <div id="upload-error-msg" style="display: none; color: #ef4444; font-size: 0.85rem; margin-top: 0.6rem;"></div>
+                <div class="modal-actions" style="margin-top: 1.2rem; display: flex; justify-content: flex-end; gap: 0.5rem;">
+                    <button type="button" id="cancel-upload-btn" class="btn btn-secondary">Hủy</button>
+                    <button type="submit" id="submit-upload-btn" class="btn btn-primary">Bắt Đầu Nạp RAG</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- AUTH MODAL (ĐĂNG NHẬP / ĐĂNG KÝ KHÔNG CẦN EMAIL) -->
+    <div id="auth-modal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card auth-card">
+            <div class="modal-header">
+                <h3 id="auth-modal-title">🔐 Đăng Nhập Hệ Thống</h3>
+                <button id="close-auth-modal-btn" class="icon-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="auth-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                    <button type="button" id="tab-login-btn" class="btn btn-primary btn-sm active" style="flex:1;">
+                        <span>Đăng Nhập</span>
+                    </button>
+                    <button type="button" id="tab-register-btn" class="btn btn-secondary btn-sm" style="flex:1;">
+                        <span>Đăng Ký (Không Email)</span>
+                    </button>
+                </div>
+
+                <!-- BANNER ĐĂNG KÝ KHÔNG CẦN EMAIL (CHỈ HIỆN KHI ĐĂNG KÝ) -->
+                <div id="signup-no-email-banner" class="signup-feature-badge" style="display: none;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    <span><strong>Không cần Email xác thực:</strong> Đăng ký tài khoản tức thì, sẵn sàng tải lên tài liệu và chat RAG ngay!</span>
+                </div>
+
+                <!-- TÀI KHOẢN MẪU TỪ CSDL NEON (CHỈ HIỆN KHI ĐĂNG NHẬP) -->
+                <div id="quick-login-hints-box" class="quick-login-hints" style="background: var(--bg-secondary); padding: 0.65rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.8rem; border: 1px solid var(--border-color);">
+                    <span style="color: var(--text-muted); display: block; margin-bottom: 0.4rem; font-weight: 500;">Tài khoản mẫu từ CSDL:</span>
+                    <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-outline btn-xs quick-account-btn" data-user="admin" data-pass="1234567">👑 admin (Quản trị)</button>
+                        <button type="button" class="btn btn-outline btn-xs quick-account-btn" data-user="haviet" data-pass="vietha2003">👤 haviet (Người dùng)</button>
+                    </div>
+                </div>
+
+                <div id="auth-success-msg" class="auth-success-msg" style="display: none;"></div>
+                <div id="auth-error-msg" style="display: none; color: #ef4444; font-size: 0.82rem; margin-bottom: 0.8rem; background: rgba(239, 68, 68, 0.1); padding: 0.6rem; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.25);"></div>
+
+                <form id="auth-form">
+                    <div class="form-group" style="margin-bottom: 0.85rem;">
+                        <label class="label-title" for="auth-username">Tên Đăng Nhập:</label>
+                        <input type="text" id="auth-username" class="custom-input" placeholder="Ví dụ: haviet, sinhvien01" required autocomplete="username">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0.85rem;">
+                        <label class="label-title" for="auth-password">Mật Khẩu:</label>
+                        <div class="password-input-wrap">
+                            <input type="password" id="auth-password" class="custom-input" placeholder="Nhập mật khẩu" required autocomplete="current-password">
+                            <button type="button" class="toggle-password-btn" data-target="auth-password" title="Ẩn/Hiện mật khẩu">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TRƯỜNG NHẬP LẠI MẬT KHẨU KHI SIGNUP -->
+                    <div id="confirm-password-group" class="form-group" style="display: none; margin-bottom: 1rem;">
+                        <label class="label-title" for="auth-password-confirm">Xác Nhận Lại Mật Khẩu:</label>
+                        <div class="password-input-wrap">
+                            <input type="password" id="auth-password-confirm" class="custom-input" placeholder="Nhập lại mật khẩu vừa đặt" autocomplete="new-password">
+                            <button type="button" class="toggle-password-btn" data-target="auth-password-confirm" title="Ẩn/Hiện mật khẩu">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;">
+                        <button type="submit" id="auth-submit-btn" class="btn btn-primary" style="width: 100%;">Đăng Nhập</button>
+                    </div>
+
+                    <div class="auth-switch-link">
+                        <span id="auth-switch-prompt">Chưa có tài khoản?</span>
+                        <a id="auth-switch-action">Đăng ký ngay (Không cần email)</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHAT HISTORY MODAL (NEON DB CHAT SESSIONS & MESSAGES) -->
+    <div id="history-modal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card history-card" style="max-width: 680px; width: 92%;">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                    <span style="font-size: 1.3rem;">🕒</span>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-color);">Lịch Sử Hội Thoại</h3>
+                        <span style="font-size: 0.78rem; color: var(--text-muted);">Đồng bộ và lưu trữ trực tiếp trên Neon PostgreSQL DB</span>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <button id="new-session-modal-btn" class="btn btn-primary btn-xs" title="Bắt đầu phiên hội thoại mới">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <span>+ Đoạn Chat Mới</span>
+                    </button>
+                    <button id="close-history-modal-btn" class="icon-btn">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; display: flex; flex-direction: column; gap: 0.8rem;">
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="text" id="history-search-input" class="custom-input" placeholder="🔍 Tìm kiếm phiên trò chuyện..." style="flex: 1; padding: 0.45rem 0.75rem; font-size: 0.85rem;">
+                    <button id="refresh-history-btn" class="btn btn-secondary btn-sm" title="Làm mới danh sách">🔄</button>
+                </div>
+                <div id="history-sessions-container" class="history-sessions-container custom-scrollbar" style="overflow-y: auto; max-height: 52vh; display: flex; flex-direction: column; gap: 0.55rem;">
+                    <div style="text-align: center; color: var(--text-muted); padding: 2rem 1rem;">
+                        <div class="spinner-sm" style="margin: 0 auto 0.5rem auto;"></div>
+                        <span>Đang tải lịch sử phiên chat...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================== -->
+    <!-- OFFICE ONLINE PREVIEW MODAL (XEM TRƯỚC DOCX, XLSX, PPTX, PDF TRỰC TIẾP TRÊN TRÌNH DUYỆT) -->
+    <!-- ========================================================================== -->
+    <div id="office-preview-modal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card office-preview-modal-card">
+            <!-- Modal Toolbar -->
+            <div class="office-preview-toolbar">
+                <div class="preview-title-wrap">
+                    <div class="preview-doc-icon-badge" id="preview-doc-icon">📘</div>
+                    <div style="min-width: 0;">
+                        <h4 id="preview-filename" class="preview-filename">TaiLieu.docx</h4>
+                        <div class="preview-sub-status">
+                            <span class="status-live-dot"></span>
+                            <span id="preview-status-pill">Sẵn sàng xem trước</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="preview-tools-actions">
+                    <div class="preview-zoom-group">
+                        <button type="button" id="office-zoom-out-btn" class="icon-btn icon-btn-xs" title="Thu nhỏ (-)">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        </button>
+                        <span id="office-zoom-level" class="zoom-level-text">100%</span>
+                        <button type="button" id="office-zoom-in-btn" class="icon-btn icon-btn-xs" title="Phóng to (+)">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        </button>
+                        <button type="button" id="office-zoom-reset-btn" class="icon-btn icon-btn-xs" title="Khôi phục kích thước 100%">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                        </button>
+                    </div>
+
+                    <button type="button" id="office-print-btn" class="btn btn-outline btn-xs" title="In tài liệu này" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.45rem 0.75rem;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                        <span>In</span>
+                    </button>
+
+                    <button type="button" id="office-fullscreen-btn" class="btn btn-outline btn-xs" title="Chế độ toàn màn hình" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.45rem 0.75rem;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+                        <span>Toàn Màn Hình</span>
+                    </button>
+
+                    <a id="office-preview-download-btn" href="#" class="btn btn-success btn-xs" download style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.45rem 0.85rem;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        <span>Tải Về Máy</span>
+                    </a>
+
+                    <button type="button" id="close-office-preview-btn" class="icon-btn" title="Đóng cửa sổ xem trước">&times;</button>
+                </div>
+            </div>
+
+            <!-- Modal Content Canvas -->
+            <div id="office-preview-canvas" class="office-preview-canvas custom-scrollbar">
+                <div id="office-preview-loading" class="office-preview-loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <span id="office-preview-loading-txt">Đang tải và kết xuất tài liệu...</span>
+                </div>
+
+                <!-- 1. DOCX Container (Client-Side docx-preview) -->
+                <div id="office-docx-container" class="office-docx-container" style="display: none;"></div>
+
+                <!-- 2. XLSX Container (Client-Side SheetJS) -->
+                <div id="office-xlsx-wrapper" class="office-xlsx-wrapper" style="display: none;">
+                    <div class="office-xlsx-ribbon-bar">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span>📊</span>
+                            <strong>Microsoft Excel Online Viewer</strong>
+                        </div>
+                        <span style="opacity: 0.85; font-size: 0.76rem;">Bảng tính tính toán và dữ liệu</span>
+                    </div>
+                    <div id="office-xlsx-container" class="office-xlsx-container custom-scrollbar"></div>
+                    <div id="office-xlsx-sheet-tabs" class="office-xlsx-sheet-tabs"></div>
+                </div>
+
+                <!-- 3. PPTX Container (Interactive Slide Deck with Thumbnails Rail) -->
+                <div id="office-pptx-container" class="office-pptx-container" style="display: none;">
+                    <div id="pptx-thumb-rail" class="pptx-thumb-rail custom-scrollbar"></div>
+                    <div class="pptx-main-deck">
+                        <div id="office-pptx-slide-view" class="pptx-slide-canvas custom-scrollbar"></div>
+                        <div class="office-pptx-nav-bar">
+                            <button type="button" id="pptx-prev-slide-btn" class="btn btn-secondary btn-xs">◀ Slide Trước</button>
+                            <span id="pptx-slide-counter" style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">Slide 1 / 1</span>
+                            <button type="button" id="pptx-next-slide-btn" class="btn btn-secondary btn-xs">Slide Sau ▶</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. PDF Iframe -->
+                <iframe id="office-pdf-iframe" class="office-pdf-iframe" style="display: none;"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="js/libs/jszip.min.js?v=2.6.0"></script>
+    <script src="js/libs/docx-preview.js?v=2.6.0"></script>
+    <script src="js/libs/xlsx.full.min.js?v=2.6.0"></script>
+    <script src="js/config.js?v=2.6.0"></script>
+    <script src="js/app.js?v=2.6.0"></script>
+</body>
+</html>
