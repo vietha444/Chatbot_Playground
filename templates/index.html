@@ -22,8 +22,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 
     <!-- App Styles -->
-    <link rel="stylesheet" href="css/style.css?v=2.6.0">
-    <link rel="stylesheet" href="css/office.css?v=2.6.0">
+    <link rel="stylesheet" href="css/style.css?v=2.8.5">
+    <link rel="stylesheet" href="css/office.css?v=2.8.5">
 </head>
 <body>
 
@@ -44,27 +44,34 @@
                 </div>
             </div>
 
-            <!-- TABS NAVIGATION: TÁCH RIÊNG CHAT AI VÀ CHAT RAG -->
-            <nav class="nav-tabs">
-                <button class="tab-btn active" data-tab="tab-direct-chat">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                    <span>Trò Chuyện AI</span>
+            <nav class="nav-tabs" aria-label="Thanh điều hướng chức năng">
+                <button class="tab-btn active" data-tab="tab-direct-chat" title="Trò chuyện trực tiếp với AI (Hỏi đáp, lập trình, phân tích)">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <span>Chat AI</span>
                 </button>
-                <button class="tab-btn" data-tab="tab-rag-chat">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
-                    <span>Hỏi Đáp RAG Tài Liệu</span>
+                <button class="tab-btn" data-tab="tab-rag-chat" title="Hỏi đáp & Tra cứu tri thức chuyên sâu từ tài liệu (RAG)">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+                    <span>Hỏi Đáp RAG</span>
                 </button>
-                <button class="tab-btn" data-tab="tab-ocr">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                    <span>OCR & Công Thức Toán</span>
+                <button class="tab-btn" data-tab="tab-ocr" title="Nhận diện ký tự OCR từ ảnh/PDF & Trích xuất công thức Toán học">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    <span>OCR & Toán</span>
                 </button>
-                <button class="tab-btn" data-tab="tab-documents">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-                    <span>Kho & Quản Lý Tài Liệu</span>
+                <button class="tab-btn" data-tab="tab-documents" title="Kho tri thức & Quản lý tài liệu lưu trữ">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                    <span>Kho Tài Liệu</span>
                 </button>
-                <button class="tab-btn" data-tab="tab-office">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M12 18v-6"></path><path d="M9 15l3 3 3-3"></path></svg>
-                    <span>Office Studio AI</span>
+                <button class="tab-btn" data-tab="tab-office" title="Tạo & Biên tập thông minh file Word, Excel, PowerPoint">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M12 18v-6"></path><path d="M9 15l3 3 3-3"></path></svg>
+                    <span>Office Studio</span>
+                </button>
+                <button class="tab-btn" data-tab="tab-roleplay" id="tab-nav-roleplay" title="Nhập vai trò chuyện tương tác cùng các nhân vật AI">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a5 5 0 0 0-5 5v2a5 5 0 0 0 10 0V7a5 5 0 0 0-5-5z"></path><path d="M3 20a9 9 0 0 1 18 0"></path><path d="M19 11l3 3-3 3"></path><path d="M5 11l-3 3 3 3"></path></svg>
+                    <span>Nhập Vai AI</span>
+                </button>
+                <button class="tab-btn" data-tab="tab-admin-models" id="tab-nav-admin-models" title="Quản trị danh mục mô hình LLM trên toàn hệ thống">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+                    <span>Quản Lý LLM</span>
                 </button>
             </nav>
 
@@ -74,6 +81,7 @@
                     <div id="logged-in-box" class="logged-in-box" style="display: none;">
                         <span id="user-role-badge" class="user-role-badge user-badge">👤 Người dùng</span>
                         <span id="user-display-name" class="user-display-name">haviet</span>
+                        <button id="header-admin-models-btn" class="btn btn-outline btn-xs" title="Quản trị mô hình LLM hệ thống" style="display: none; background: rgba(14, 165, 233, 0.08); border-color: #0284c7; color: #0284c7; font-weight: 600;">⚙️ Quản lý LLM</button>
                         <button id="logout-btn" class="btn btn-outline btn-xs" title="Đăng xuất / Đổi tài khoản">Đổi tài khoản</button>
                     </div>
                     <div id="auth-buttons-group" class="auth-buttons-group">
@@ -169,16 +177,16 @@
                             </div>
                         </div>
 
-                        <!-- Dải xem trước ảnh đính kèm (Direct Chat) -->
+                        <!-- Dải xem trước tệp & ảnh đính kèm (Direct Chat) -->
                         <div id="direct-attached-preview" class="attached-images-bar" style="display: none;"></div>
 
                         <!-- Hộp gõ văn bản -->
                         <div class="dock-input-wrapper">
-                            <input type="file" id="direct-image-file-input" accept="image/png, image/jpeg, image/webp" multiple style="display: none;">
-                            <button type="button" id="direct-attach-img-btn" class="dock-tool-btn" title="Đính kèm hình ảnh để hỏi AI Multimodal (hoặc dán Ctrl+V)">
-                                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                            <input type="file" id="direct-image-file-input" accept=".pdf, .docx, .doc, .xlsx, .xls, .pptx, .ppt, .txt, .md, .csv, .json, .py, .js, .ts, .html, .css, .c, .cpp, .java, .sql, .sh, .yml, .yaml, .xml, image/*" multiple style="display: none;">
+                            <button type="button" id="direct-attach-img-btn" class="dock-tool-btn" title="Đính kèm tệp văn bản (Word, Excel, PDF, PPTX, Code, Text...) hoặc hình ảnh (Ctrl+V)">
+                                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
                             </button>
-                            <textarea id="direct-chat-input" placeholder="Hỏi bất kỳ điều gì với AI (đính kèm ảnh hoặc dán Ctrl+V, Shift+Enter xuống dòng)..." rows="1"></textarea>
+                            <textarea id="direct-chat-input" placeholder="Hỏi bất kỳ điều gì với AI (đính kèm tệp Word, Excel, PDF, Code hoặc ảnh Ctrl+V, Shift+Enter xuống dòng)..." rows="1"></textarea>
                             <button id="direct-chat-send-btn" class="dock-send-btn" title="Gửi tin nhắn">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                             </button>
@@ -345,16 +353,16 @@
                                 </div>
                             </div>
 
-                            <!-- Dải xem trước ảnh đính kèm (RAG Chat) -->
+                            <!-- Dải xem trước tệp & ảnh đính kèm (RAG Chat) -->
                             <div id="rag-attached-preview" class="attached-images-bar" style="display: none;"></div>
 
                             <!-- Hộp nhập câu hỏi RAG -->
                             <div class="dock-input-wrapper">
-                                <input type="file" id="rag-image-file-input" accept="image/png, image/jpeg, image/webp" multiple style="display: none;">
-                                <button type="button" id="rag-attach-img-btn" class="dock-tool-btn" title="Đính kèm ảnh minh họa hoặc sơ đồ vào câu hỏi RAG (hoặc dán Ctrl+V)">
-                                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                <input type="file" id="rag-image-file-input" accept=".pdf, .docx, .doc, .xlsx, .xls, .pptx, .ppt, .txt, .md, .csv, .json, .py, .js, .ts, .html, .css, .c, .cpp, .java, .sql, .sh, .yml, .yaml, .xml, image/*" multiple style="display: none;">
+                                <button type="button" id="rag-attach-img-btn" class="dock-tool-btn" title="Đính kèm tệp văn bản (Word, Excel, PDF, PPTX, Code, Text...) hoặc hình ảnh (Ctrl+V)">
+                                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
                                 </button>
-                                <textarea id="rag-chat-input" placeholder="Đặt câu hỏi cần tra cứu từ các tài liệu đã chọn (hỗ trợ đính kèm ảnh, Shift+Enter xuống dòng)..." rows="1"></textarea>
+                                <textarea id="rag-chat-input" placeholder="Đặt câu hỏi cần tra cứu từ các tài liệu đã chọn (hỗ trợ đính kèm thêm tệp, ảnh minh họa, Shift+Enter xuống dòng)..." rows="1"></textarea>
                                 <button id="rag-chat-send-btn" class="dock-send-btn" title="Gửi câu hỏi RAG">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                                 </button>
@@ -424,14 +432,14 @@
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; margin-bottom: 0.85rem;">
                                 <div class="form-group">
                                     <label for="ocr-language-select" style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 0.2rem;">Ngôn ngữ:</label>
-                                    <select id="ocr-language-select" class="custom-select" style="font-size: 0.8rem; padding: 0.4rem 0.5rem; width: 100%;">
+                                    <select id="ocr-language-select" class="custom-select" style="font-size: 0.8rem; width: 100%;">
                                         <option value="vi,en" selected>Tiếng Việt + Anh</option>
                                         <option value="en">Tiếng Anh</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
                                     <label for="ocr-format-select" style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 0.2rem;">Định dạng xuất:</label>
-                                    <select id="ocr-format-select" class="custom-select" style="font-size: 0.8rem; padding: 0.4rem 0.5rem; width: 100%;">
+                                    <select id="ocr-format-select" class="custom-select" style="font-size: 0.8rem; width: 100%;">
                                         <option value="markdown" selected>Markdown (RAG)</option>
                                         <option value="pure_latex_article">Thuần LaTeX (Article)</option>
                                         <option value="pure_latex_ieee">Thuần LaTeX (IEEEtran)</option>
@@ -449,14 +457,14 @@
                             </div>
 
                             <!-- Ollama AI Post-Correction -->
-                            <div class="ocr-ai-fix-box" style="padding: 0.75rem; background: var(--bg-surface-elevated); border: 1px solid var(--border-color); border-radius: 8px;">
+                            <div class="ocr-ai-fix-box" style="padding: 0.85rem; background: var(--bg-surface-elevated); border: 1.5px solid var(--border-color); border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
                                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">
                                     <input type="checkbox" id="ocr-use-ollama-check" checked>
                                     <span>✨ Sửa lỗi & dấu tiếng Việt bằng Ollama</span>
                                 </label>
                                 <div id="ocr-model-select-wrapper" style="margin-top: 0.5rem;">
-                                    <label for="ocr-model-select" style="font-size: 0.74rem; color: var(--text-muted); display: block; margin-bottom: 0.2rem;">Mô hình AI sửa lỗi:</label>
-                                    <select id="ocr-model-select" class="custom-select" style="font-size: 0.8rem; padding: 0.35rem 0.5rem; width: 100%;">
+                                    <label for="ocr-model-select" style="font-size: 0.74rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Mô hình AI sửa lỗi:</label>
+                                    <select id="ocr-model-select" class="custom-select" style="font-size: 0.8rem; width: 100%;">
                                         <option value="qwen2.5:14b" selected>Qwen 2.5 14B (Tiếng Việt chuẩn)</option>
                                         <option value="qwen2.5:32b">Qwen 2.5 32B (Suy luận sâu)</option>
                                         <option value="llama3.1:latest">Llama 3.1 8B</option>
@@ -1259,6 +1267,354 @@
                 </div>
             </section>
 
+            <!-- ======================================================== -->
+            <!-- TAB 6: NHẬP VAI AI (AI ROLEPLAY VỚI NHÂN VẬT TỪ NEON DB) -->
+            <!-- ======================================================== -->
+            <section id="tab-roleplay" class="tab-content custom-scrollbar">
+                <!-- VIEW 1: ROLEPLAY CHARACTER HUB (BẢNG TRƯNG BÀY NHÂN VẬT MINH HỌA) -->
+                <div id="roleplay-view-hub" class="roleplay-view-pane active">
+                    <!-- HERO BANNER TRẮNG THANH LỊCH -->
+                    <div class="roleplay-hero-card">
+                        <div class="roleplay-hero-info">
+                            <div class="roleplay-hero-badge">
+                                <span class="badge-dot-live"></span>
+                                <span>Neon DB Synchronized • Ollama Multi-Model</span>
+                            </div>
+                            <h2>🎭 Không Gian Nhập Vai AI (AI Character Hub)</h2>
+                            <p>Khám phá và đàm thoại chân thực cùng các nhân vật AI phong phú. Mỗi nhân vật sở hữu cá tính, kịch bản bối cảnh và ngoại hình minh họa riêng biệt, sẵn sàng đồng hành cùng bạn.</p>
+                            <div class="roleplay-hero-tags">
+                                <div class="hero-tag-chip">
+                                    <span class="chip-icon">👥</span>
+                                    <span><strong id="roleplay-hero-count">6</strong> Nhân vật có sẵn</span>
+                                </div>
+                                <div class="hero-tag-chip">
+                                    <span class="chip-icon">⚡</span>
+                                    <span>Streaming trực tiếp</span>
+                                </div>
+                                <div class="hero-tag-chip">
+                                    <span class="chip-icon">💬</span>
+                                    <span>Cử chỉ biểu cảm <code>*hành động*</code></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="roleplay-hero-buttons">
+                            <button type="button" class="btn btn-primary" id="roleplay-btn-create-char">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                <span>Tạo Nhân Vật Mới</span>
+                            </button>
+                            <button type="button" class="btn btn-outline" id="roleplay-btn-refresh-chars" title="Tải lại danh sách từ Neon DB">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                                <span>Làm Mới</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- THANH ĐIỀU KHIỂN & LỌC TÌM KIẾM (TOOLBAR) -->
+                    <div class="roleplay-toolbar-card">
+                        <!-- CATEGORY PILLS -->
+                        <div class="roleplay-category-pills">
+                            <button type="button" class="roleplay-cat-pill active" data-category="all">
+                                <span>Tất Cả</span>
+                                <span class="pill-count" id="count-cat-all">6</span>
+                            </button>
+                            <button type="button" class="roleplay-cat-pill" data-category="education">
+                                <span>🎓 Giáo Dục & Trợ Giảng</span>
+                            </button>
+                            <button type="button" class="roleplay-cat-pill" data-category="anime">
+                                <span>🌸 Anime & Đời Thường</span>
+                            </button>
+                            <button type="button" class="roleplay-cat-pill" data-category="trending">
+                                <span>🔥 Thịnh Hành</span>
+                            </button>
+                        </div>
+
+                        <!-- SEARCH & SORT CONTROLS -->
+                        <div class="roleplay-search-sort-wrap">
+                            <div class="roleplay-search-input-box">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                <input type="text" id="roleplay-hub-search-input" placeholder="Tìm kiếm theo tên, tính cách hoặc bối cảnh...">
+                            </div>
+
+                            <div class="roleplay-sort-select-box">
+                                <span class="sort-label">Sắp xếp:</span>
+                                <select id="roleplay-hub-sort-select" class="roleplay-select-clean">
+                                    <option value="created">Mới nhất</option>
+                                    <option value="name">Tên (A-Z)</option>
+                                    <option value="temp">Nhiệt độ (Temperature)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- LƯỚI THẺ NHÂN VẬT MINH HỌA TRẮNG TINH TẾ (CHARACTER CARDS GRID) -->
+                    <div class="roleplay-grid-deck">
+                        <div id="roleplay-cards-grid" class="roleplay-cards-grid">
+                            <div class="roleplay-grid-loading">
+                                <div class="spinner-sm"></div>
+                                <span>Đang nạp các nhân vật từ Neon DB...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 2: DEDICATED CHAT ARENA (PHÒNG TRÒ CHUYỆN NHẬP VAI) -->
+                <div id="roleplay-view-chat" class="roleplay-view-pane" style="display: none;">
+                    <!-- ARENA TOP HEADER -->
+                    <div class="roleplay-arena-topbar">
+                        <div class="arena-left-meta">
+                            <button type="button" class="btn btn-outline btn-sm roleplay-back-btn" id="roleplay-chat-back-btn" title="Quay lại danh mục nhân vật">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                                <span>Danh Sách Nhân Vật</span>
+                            </button>
+
+                            <div class="arena-char-profile">
+                                <img id="active-char-avatar" class="arena-char-avatar" src="" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=AI&background=6366f1&color=fff'">
+                                <div class="arena-char-text">
+                                    <div class="arena-char-title-row">
+                                        <h3 id="active-char-name">Futaba Igarashi</h3>
+                                        <span id="active-char-badge" class="badge-char-tag">AI Roleplay</span>
+                                    </div>
+                                    <p id="active-char-desc" class="arena-char-tagline">Sẵn sàng trò chuyện</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="arena-right-controls">
+                            <!-- MODEL PICKER -->
+                            <div class="roleplay-model-picker">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+                                <select id="roleplay-model-select" class="roleplay-select-clean">
+                                    <option value="qwen2.5:14b" selected>Qwen 2.5 14B (Mặc định)</option>
+                                    <option value="llama3.1:latest">Llama 3.1 8B (Meta AI)</option>
+                                    <option value="deepseek-r1:8b">DeepSeek R1 8B (CoT Suy Luận)</option>
+                                    <option value="qwen2.5:32b">Qwen 2.5 32B (Chuyên gia)</option>
+                                    <option value="glm-4.7-flash:latest">GLM 4.7 Flash (Siêu nhanh)</option>
+                                    <option value="mistral:latest">Mistral 7B (Đa dụng)</option>
+                                    <option value="deepseek-coder:6.7b">DeepSeek Coder 6.7B</option>
+                                </select>
+                            </div>
+
+                            <button type="button" id="roleplay-toggle-params-btn" class="btn btn-outline btn-sm" title="Tùy chỉnh thông số sinh">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                <span>Thông Số</span>
+                            </button>
+
+                            <button type="button" id="roleplay-toggle-bio-btn" class="btn btn-outline btn-sm" title="Xem bối cảnh & kịch bản nhân vật">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                <span>Hồ Sơ</span>
+                            </button>
+
+                            <button type="button" id="roleplay-reset-chat-btn" class="btn btn-secondary btn-sm" title="Làm mới cuộc trò chuyện">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path><path d="M16 21h5v-5"></path></svg>
+                                <span>Làm Mới</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- COLLAPSIBLE PARAMS DRAWER -->
+                    <div id="roleplay-params-drawer" class="roleplay-drawer" style="display: none;">
+                        <div class="drawer-inner-grid">
+                            <div class="param-item">
+                                <div class="param-label-row">
+                                    <span>Nhiệt độ (Temperature)</span>
+                                    <strong id="val-temp-display">1.0</strong>
+                                </div>
+                                <input type="range" id="roleplay-param-temp" min="0.1" max="2.0" step="0.05" value="1.0">
+                                <small class="param-hint">Cao hơn = Sáng tạo; Thấp hơn = Chuẩn xác</small>
+                            </div>
+                            <div class="param-item">
+                                <div class="param-label-row">
+                                    <span>Tránh lặp (Repeat Penalty)</span>
+                                    <strong id="val-rep-display">1.1</strong>
+                                </div>
+                                <input type="range" id="roleplay-param-rep" min="1.0" max="2.0" step="0.05" value="1.1">
+                                <small class="param-hint">Ngăn lặp lại từ ngữ vừa dùng</small>
+                            </div>
+                            <div class="param-item">
+                                <div class="param-label-row">
+                                    <span>Min P</span>
+                                    <strong id="val-minp-display">0.1</strong>
+                                </div>
+                                <input type="range" id="roleplay-param-minp" min="0.01" max="0.5" step="0.01" value="0.1">
+                                <small class="param-hint">Ngưỡng xác suất tối thiểu</small>
+                            </div>
+                            <div class="param-item">
+                                <div class="param-label-row">
+                                    <span>Repeat Last N</span>
+                                    <strong id="val-replast-display">128</strong>
+                                </div>
+                                <input type="range" id="roleplay-param-replast" min="32" max="512" step="32" value="128">
+                                <small class="param-hint">Số lượng token kiểm tra chống lặp</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COLLAPSIBLE BIO DRAWER -->
+                    <div id="roleplay-bio-drawer" class="roleplay-drawer" style="display: none;">
+                        <div class="bio-drawer-content">
+                            <div class="bio-section">
+                                <h4>👤 Tính Cách & Ngoại Hình (Persona)</h4>
+                                <div id="bio-persona-text" class="bio-box"></div>
+                            </div>
+                            <div class="bio-section">
+                                <h4>🌍 Bối Cảnh & Kịch Bản (Scenario)</h4>
+                                <div id="bio-scenerio-text" class="bio-box"></div>
+                            </div>
+                            <div class="bio-section">
+                                <h4>📜 Chỉ Thị Nhập Vai (Instruction)</h4>
+                                <div id="bio-instruction-text" class="bio-box"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CHAT FEED -->
+                    <div id="roleplay-messages-container" class="roleplay-messages-feed custom-scrollbar">
+                        <!-- Messages rendered dynamically -->
+                    </div>
+
+                    <!-- CHAT INPUT DOCK -->
+                    <div class="roleplay-input-dock">
+                        <div class="roleplay-input-bar">
+                            <textarea id="roleplay-user-input" rows="1" placeholder="Nói điều gì đó hoặc dùng *hành động* để diễn tả cử chỉ (ví dụ: *nhìn bạn mỉm cười* Chào buổi sáng!)..."></textarea>
+                            <button type="button" id="roleplay-send-btn" class="btn btn-primary roleplay-send-btn" title="Gửi tin nhắn (Enter)">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            </button>
+                        </div>
+                        <div class="roleplay-input-hint">
+                            <span>💡 Nhấn <strong>Enter</strong> để gửi, <strong>Shift+Enter</strong> xuống dòng. Các từ trong <code>*dấu sao*</code> tự động định dạng thành cử chỉ biểu cảm.</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ======================================================== -->
+            <!-- TAB ADMIN: QUẢN TRỊ MÔ HÌNH LLM TOÀN HỆ THỐNG -->
+            <!-- ======================================================== -->
+            <section id="tab-admin-models" class="tab-content custom-scrollbar">
+                <!-- THÔNG BÁO QUYỀN TRUY CẬP (HIỂN THỊ KHI CHƯA PHẢI ADMIN) -->
+                <div id="admin-auth-notice" class="admin-auth-notice-card" style="display: none;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 1.4rem;">🔒</span>
+                        <div>
+                            <strong style="color: #b45309; font-size: 0.92rem; display: block;">Chế độ Xem (Chưa Đăng Nhập Admin)</strong>
+                            <span style="font-size: 0.8rem; color: #78350f;">Bạn đang xem danh sách mô hình. Để Thêm mô hình mới, Xóa mô hình hoặc Đặt mặc định, vui lòng đăng nhập tài khoản Quản trị viên.</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-sm" id="admin-quick-login-btn">
+                        <span>🔑 Đăng Nhập Nhanh Admin</span>
+                    </button>
+                </div>
+
+                <!-- ADMIN HERO BANNER -->
+                <div class="admin-models-hero-card">
+                    <div class="admin-models-hero-main">
+                        <div class="admin-badge-pill">
+                            <span class="pulse-dot"></span>
+                            <span>KHU VỰC DÀNH CHO ADMIN</span>
+                        </div>
+                        <h2>⚙️ Quản Trị Mô Hình LLM Hệ Thống</h2>
+                        <p>Thêm tên mô hình mới, xóa mô hình khỏi hệ thống hoặc thiết lập mô hình mặc định. Dữ liệu được đồng bộ trực tiếp vào cơ sở dữ liệu Neon DB và áp dụng tức thì trên toàn bộ hệ thống (Trò chuyện trực tiếp, RAG, OCR, Office Studio, Nhập vai AI).</p>
+                    </div>
+                    <div class="admin-models-hero-actions">
+                        <button type="button" class="btn btn-primary" id="admin-btn-open-add-model">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            <span>+ Thêm Mô Hình Mới</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="admin-btn-scan-ollama" title="Quét các model đã tải trên Ollama server">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                            <span>Quét Ollama Host</span>
+                        </button>
+                        <button type="button" class="btn btn-outline" id="admin-btn-refresh-models" title="Tải lại danh sách từ Neon DB">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                            <span>Làm mới</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ADMIN STATS CARDS -->
+                <div class="admin-models-stats-grid">
+                    <div class="admin-stat-card">
+                        <div class="stat-icon-wrap" style="background: rgba(14, 165, 233, 0.1); color: #0284c7;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/></svg>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-num" id="admin-stat-total-models">0</span>
+                            <span class="stat-label">Mô hình hoạt động (Neon DB)</span>
+                        </div>
+                    </div>
+
+                    <div class="admin-stat-card">
+                        <div class="stat-icon-wrap" style="background: rgba(234, 179, 8, 0.1); color: #ca8a04;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-num truncate-stat" id="admin-stat-default-model">qwen2.5:14b</span>
+                            <span class="stat-label">Mô hình mặc định toàn hệ thống</span>
+                        </div>
+                    </div>
+
+                    <div class="admin-stat-card">
+                        <div class="stat-icon-wrap" style="background: rgba(168, 85, 247, 0.1); color: #9333ea;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-num" id="admin-stat-multimodal-count">0</span>
+                            <span class="stat-label">Hỗ trợ Đa phương thức (Vision)</span>
+                        </div>
+                    </div>
+
+                    <div class="admin-stat-card">
+                        <div class="stat-icon-wrap" style="background: rgba(34, 197, 94, 0.1); color: #16a34a;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-num" id="admin-stat-ollama-status">Đang kết nối...</span>
+                            <span class="stat-label" id="admin-stat-ollama-url">Ollama Host</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MAIN WORKSPACE: 2-COLUMN VIEW -->
+                <div class="admin-models-layout">
+                    <!-- LEFT COLUMN: ACTIVE SYSTEM MODELS (NEON DB) -->
+                    <div class="admin-models-column active-models-col">
+                        <div class="admin-column-header">
+                            <div class="col-title-wrap">
+                                <h3>📋 Danh Sách Mô Hình Hệ Thống</h3>
+                                <span class="admin-tag-badge" id="admin-active-count-badge">0 mô hình</span>
+                            </div>
+                            <div class="col-filter-wrap">
+                                <input type="text" id="admin-search-models" placeholder="Tìm theo tên hoặc ID..." class="admin-search-input">
+                            </div>
+                        </div>
+
+                        <div id="admin-models-list-container" class="admin-models-list custom-scrollbar">
+                            <div class="admin-loading-placeholder">Đang tải danh sách mô hình từ Neon DB...</div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN: DETECTED OLLAMA MODELS -->
+                    <div class="admin-models-column ollama-detected-col">
+                        <div class="admin-column-header">
+                            <div class="col-title-wrap">
+                                <h3>🦙 Mô Hình Trên Máy Chủ Ollama</h3>
+                                <span class="admin-tag-badge" id="admin-ollama-count-badge">0 phát hiện</span>
+                            </div>
+                            <button type="button" class="btn btn-xs btn-outline" id="admin-btn-quick-sync" title="Đồng bộ danh sách từ Ollama">
+                                Quét lại
+                            </button>
+                        </div>
+                        <p class="col-subdesc">Các mô hình đã được tải (pull) về máy chủ Ollama. Bạn có thể thêm nhanh vào danh sách cho phép của hệ thống chỉ với 1 cú nhấp chuột.</p>
+
+                        <div id="admin-ollama-list-container" class="admin-ollama-list custom-scrollbar">
+                            <div class="admin-loading-placeholder">Đang quét máy chủ Ollama...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            
         </main>
 
         <!-- THANH BÊN LỊCH SỬ CHAT REALTIME (ĐẶT BÊN PHẢI) -->
@@ -1574,11 +1930,136 @@
         </div>
     </div>
 
+        <!-- MODAL TẠO NHÂN VẬT MỚI (CREATE CHARACTER MODAL) -->
+    <div id="roleplay-create-modal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card roleplay-modal-card">
+            <div class="modal-header">
+                <div class="modal-title-row" style="display: flex; align-items: center; gap: 8px;">
+                    <span class="modal-icon" style="font-size: 1.2rem;">🎭</span>
+                    <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700;">Tạo Nhân Vật AI Mới (Lưu vào Neon DB)</h3>
+                </div>
+                <button type="button" class="icon-btn" id="roleplay-close-create-btn" title="Đóng">&times;</button>
+            </div>
+            <form id="roleplay-create-form" class="modal-body roleplay-form-body custom-scrollbar">
+                <div class="form-row-grid">
+                    <div class="form-group">
+                        <label for="create-char-name">Tên nhân vật (*)</label>
+                        <input type="text" id="create-char-name" required placeholder="Ví dụ: Nikola Tesla, Frieren...">
+                    </div>
+                    <div class="form-group">
+                        <label for="create-char-content">Khẩu hiệu / Giới thiệu ngắn (*)</label>
+                        <input type="text" id="create-char-content" required placeholder="Ví dụ: Thiên tài phát minh điện năng...">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="create-char-image">Đường dẫn ảnh minh họa (URL hoặc tệp trong img/characters/)</label>
+                    <input type="text" id="create-char-image" placeholder="https://... hoặc img/characters/frieren.jpg">
+                </div>
+
+                <div class="form-group">
+                    <label for="create-char-persona">Tính cách, ngoại hình & danh tính (Persona) (*)</label>
+                    <textarea id="create-char-persona" rows="3" required placeholder="Mô tả tuổi tác, ngoại hình, trang phục, thói quen và tính cách..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="create-char-scenario">Kịch bản & Bối cảnh xuất hiện (Scenario)</label>
+                    <textarea id="create-char-scenario" rows="2" placeholder="Bối cảnh cuộc trò chuyện diễn ra ở đâu, tình huống là gì..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="create-char-instruction">Chỉ thị nhập vai hệ thống (Instruction)</label>
+                    <input type="text" id="create-char-instruction" placeholder="Ví dụ: Text transcript of a conversation. Gestures written between asterisks.">
+                </div>
+
+                <div class="form-row-grid">
+                    <div class="form-group">
+                        <label for="create-char-temp">Nhiệt độ (Temperature: <span id="create-temp-val">1.0</span>)</label>
+                        <input type="range" id="create-char-temp" min="0.1" max="2.0" step="0.05" value="1.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="create-char-rep">Tránh lặp (Repeat Penalty: <span id="create-rep-val">1.1</span>)</label>
+                        <input type="range" id="create-char-rep" min="1.0" max="2.0" step="0.05" value="1.1">
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="padding: 14px 0 0 0; border: none; display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" id="roleplay-cancel-create-btn">Hủy</button>
+                    <button type="submit" class="btn btn-primary" id="roleplay-submit-create-btn">
+                        <span>Lưu Vào Neon DB</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL THÊM / CẬP NHẬT MÔ HÌNH LLM (ADMIN ONLY - NEON DB) -->
+    <div id="admin-add-model-modal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card roleplay-modal-card admin-modal-card">
+            <div class="modal-header">
+                <div class="modal-title-row" style="display: flex; align-items: center; gap: 8px;">
+                    <span class="modal-icon" style="font-size: 1.25rem;">⚙️</span>
+                    <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700;" id="admin-model-modal-title">Thêm Mô Hình LLM Mới Vào Hệ Thống</h3>
+                </div>
+                <button type="button" class="icon-btn" id="admin-close-model-modal-btn" title="Đóng">&times;</button>
+            </div>
+            <form id="admin-add-model-form" class="modal-body roleplay-form-body custom-scrollbar">
+                <div class="form-group">
+                    <label for="admin-input-model-id">Mã định danh mô hình (Model ID / Ollama Tag) (*)</label>
+                    <input type="text" id="admin-input-model-id" required placeholder="Ví dụ: qwen2.5:14b, deepseek-r1:14b, gemma3:4b...">
+                    <small style="color: var(--text-muted); font-size: 0.74rem;">Mã tag chính xác như hiển thị trong lệnh <code>ollama list</code> trên máy chủ.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="admin-input-model-name">Tên hiển thị thân thiện trên giao diện (*)</label>
+                    <input type="text" id="admin-input-model-name" required placeholder="Ví dụ: Qwen 2.5 14B (Thông minh, Tiếng Việt chuẩn)">
+                    <small style="color: var(--text-muted); font-size: 0.74rem;">Tên hiển thị này sẽ xuất hiện trong các bộ chọn mô hình của người dùng.</small>
+                </div>
+
+                <div class="form-row-grid">
+                    <div class="form-group">
+                        <label for="admin-select-provider">Nhà cung cấp (Provider)</label>
+                        <select id="admin-select-provider" class="custom-select" style="padding: 0.45rem 2rem 0.45rem 1rem; border-radius: 9999px; width: 100%;">
+                            <option value="ollama" selected>Ollama (Máy chủ AI nội bộ)</option>
+                            <option value="openai">OpenAI Compatible API</option>
+                            <option value="custom">Custom Endpoint</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="justify-content: flex-end; padding-bottom: 4px;">
+                        <label class="admin-checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 18px;">
+                            <input type="checkbox" id="admin-chk-multimodal" style="width: 16px; height: 16px;">
+                            <span>👁️ Đa phương thức (Vision)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="admin-checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="admin-chk-default" style="width: 16px; height: 16px;">
+                        <span>⭐ Đặt làm mô hình mặc định trên toàn hệ thống</span>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label for="admin-input-model-desc">Mô tả đặc điểm / Ghi chú</label>
+                    <textarea id="admin-input-model-desc" rows="2" placeholder="Ví dụ: Mô hình kích thước vừa phải, tối ưu tiếng Việt và lập trình Python..."></textarea>
+                </div>
+
+                <div class="modal-footer" style="padding: 14px 0 0 0; border: none; display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" id="admin-cancel-model-modal-btn">Hủy</button>
+                    <button type="submit" class="btn btn-primary" id="admin-submit-model-btn">
+                        <span>Lưu Vào Neon DB & Kích Hoạt</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- SCRIPTS -->
     <script src="js/libs/jszip.min.js?v=2.6.0"></script>
     <script src="js/libs/docx-preview.js?v=2.6.0"></script>
     <script src="js/libs/xlsx.full.min.js?v=2.6.0"></script>
-    <script src="js/config.js?v=2.6.0"></script>
-    <script src="js/app.js?v=2.6.0"></script>
+    <script src="js/config.js?v=2.8.5"></script>
+    <script src="js/app.js?v=2.8.5"></script>
 </body>
 </html>

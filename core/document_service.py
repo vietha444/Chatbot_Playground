@@ -46,6 +46,16 @@ try:
 except ImportError:
     docx = None
 
+try:
+    import openpyxl
+except ImportError:
+    openpyxl = None
+
+try:
+    import pptx
+except ImportError:
+    pptx = None
+
 
 from core.embedding_service import OllamaBgeM3EmbeddingFunction
 
@@ -90,7 +100,7 @@ class DocumentService:
     # ---------------------- TRÍCH XUẤT VĂN BẢN ----------------------
     def extract_text_from_file(self, file_path: str) -> Tuple[str, int]:
         """
-        Trích xuất toàn bộ văn bản từ file (PDF, DOCX, TXT).
+        Trích xuất toàn bộ văn bản từ file (PDF, DOCX, XLSX, PPTX, TXT, Code, Markdown).
         Trả về (full_text, total_pages).
         """
         ext = file_path.split('.')[-1].lower()
@@ -132,18 +142,67 @@ class DocumentService:
             if docx is not None:
                 try:
                     doc = docx.Document(file_path)
-                    full_text = "\n\n".join([p.text for p in doc.paragraphs if p.text.strip()])
+                    parts = []
+                    for p in doc.paragraphs:
+                        if p.text.strip():
+                            parts.append(p.text.strip())
+                    for tbl in doc.tables:
+                        for row in tbl.rows:
+                            cells = [c.text.strip().replace("\n", " ") for c in row.cells]
+                            if any(cells):
+                                parts.append(" | ".join(cells))
+                    full_text = "\n\n".join(parts)
                     total_pages = max(1, len(full_text) // 2000)
                 except Exception as e:
                     print(f"[DocumentService] Lỗi đọc docx: {e}")
 
-        elif ext in ["txt", "md", "csv", "json"]:
+        elif ext in ["xlsx", "xls"]:
+            if openpyxl is not None:
+                try:
+                    wb = openpyxl.load_workbook(file_path, data_only=True)
+                    sheet_texts = []
+                    for sheet in wb.worksheets:
+                        sheet_lines = [f"### Trang tính: {sheet.title}"]
+                        has_data = False
+                        for row in sheet.iter_rows(values_only=True):
+                            if any(c is not None and str(c).strip() != "" for c in row):
+                                row_str = " | ".join([str(c) if c is not None else "" for c in row])
+                                sheet_lines.append(row_str)
+                                has_data = True
+                        if has_data:
+                            sheet_texts.append("\n".join(sheet_lines))
+                    full_text = "\n\n".join(sheet_texts)
+                    total_pages = max(1, len(wb.worksheets))
+                except Exception as e:
+                    print(f"[DocumentService] Lỗi đọc xlsx: {e}")
+
+        elif ext in ["pptx", "ppt"]:
+            if pptx is not None:
+                try:
+                    prs = pptx.Presentation(file_path)
+                    slide_texts = []
+                    for idx, slide in enumerate(prs.slides, start=1):
+                        texts = []
+                        for shape in slide.shapes:
+                            if shape.has_text_frame:
+                                for p in shape.text_frame.paragraphs:
+                                    if p.text.strip():
+                                        texts.append(p.text.strip())
+                        if texts:
+                            slide_texts.append(f"--- Slide {idx} ---\n" + "\n".join(texts))
+                    full_text = "\n\n".join(slide_texts)
+                    total_pages = max(1, len(prs.slides))
+                except Exception as e:
+                    print(f"[DocumentService] Lỗi đọc pptx: {e}")
+
+        else:
+            # Code và văn bản thuần (txt, md, csv, json, py, js, ts, html, css, c, cpp, java, sql, yaml, ...)
             try:
                 with open(file_path, "r", encoding="utf-8", errors="replace") as f:
                     full_text = f.read()
                 total_pages = max(1, len(full_text) // 2500)
             except Exception as e:
-                print(f"[DocumentService] Lỗi đọc txt: {e}")
+                print(f"[DocumentService] Lỗi đọc file text: {e}")
 
         return full_text.strip(), total_pages
 

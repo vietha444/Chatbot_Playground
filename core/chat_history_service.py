@@ -60,6 +60,7 @@ class ChatHistoryService:
                 model VARCHAR(100),
                 created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
+            ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS attached_files TEXT;
             CREATE INDEX IF NOT EXISTS idx_chat_messages_session ON chat_messages(session_id);
             CREATE INDEX IF NOT EXISTS idx_chat_sessions_user ON chat_sessions(username);
             """)
@@ -142,7 +143,8 @@ class ChatHistoryService:
         content: str,
         citations: Optional[Any] = None,
         images: Optional[Any] = None,
-        model: Optional[str] = None
+        model: Optional[str] = None,
+        attached_files: Optional[Any] = None
     ) -> bool:
         """Lưu một tin nhắn vào bảng chat_messages trong Neon DB."""
         if not session_id or not content:
@@ -151,17 +153,29 @@ class ChatHistoryService:
         user = (username or "user").strip()
         cit_str = json.dumps(citations, ensure_ascii=False) if citations else None
         img_str = json.dumps(images, ensure_ascii=False) if images else None
+        files_str = json.dumps(attached_files, ensure_ascii=False) if attached_files else None
 
         try:
             conn = self.get_db_connection()
             cur = conn.cursor()
-            cur.execute(
-                """
-                INSERT INTO chat_messages (session_id, username, role, content, citations, images, model, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP);
-                """,
-                (session_id, user, role, content, cit_str, img_str, model or "")
-            )
+            try:
+                cur.execute(
+                    """
+                    INSERT INTO chat_messages (session_id, username, role, content, citations, images, model, attached_files, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP);
+                    """,
+                    (session_id, user, role, content, cit_str, img_str, model or "", files_str)
+                )
+            except Exception:
+                conn.rollback()
+                # Fallback nếu bảng chưa có cột attached_files
+                cur.execute(
+                    """
+                    INSERT INTO chat_messages (session_id, username, role, content, citations, images, model, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP);
+                    """,
+                    (session_id, user, role, content, cit_str, img_str, model or "")
+                )
             # Cập nhật updated_at cho session
             cur.execute(
                 "UPDATE chat_sessions SET updated_at = CURRENT_TIMESTAMP WHERE session_id = %s;",
@@ -252,16 +266,31 @@ class ChatHistoryService:
         try:
             conn = self.get_db_connection()
             cur = conn.cursor()
-            cur.execute(
-                """
-                SELECT id, session_id, username, role, content, citations, images, model, created_at
-                FROM chat_messages
-                WHERE session_id = %s
-                ORDER BY created_at ASC;
-                """,
-                (session_id,)
-            )
-            rows = cur.fetchall()
+            has_attached_col = True
+            try:
+                cur.execute(
+                    """
+                    SELECT id, session_id, username, role, content, citations, images, model, attached_files, created_at
+                    FROM chat_messages
+                    WHERE session_id = %s
+                    ORDER BY created_at ASC;
+                    """,
+                    (session_id,)
+                )
+                rows = cur.fetchall()
+            except Exception:
+                conn.rollback()
+                has_attached_col = False
+                cur.execute(
+                    """
+                    SELECT id, session_id, username, role, content, citations, images, model, created_at
+                    FROM chat_messages
+                    WHERE session_id = %s
+                    ORDER BY created_at ASC;
+                    """,
+                    (session_id,)
+                )
+                rows = cur.fetchall()
             cur.close()
             conn.close()
 
@@ -280,6 +309,18 @@ class ChatHistoryService:
                     except Exception:
                         imgs = r[6]
 
+                att_files = None
+                created_ts = ""
+                if has_attached_col:
+                    if r[8]:
+                        try:
+                            att_files = json.loads(r[8])
+                        except Exception:
+                            att_files = r[8]
+                    created_ts = str(r[9])[:19] if r[9] else ""
+                else:
+                    created_ts = str(r[8])[:19] if r[8] else ""
+
                 messages.append({
                     "id": r[0],
                     "session_id": r[1],
@@ -288,8 +329,9 @@ class ChatHistoryService:
                     "content": r[4],
                     "citations": cits,
                     "images": imgs,
+                    "attached_files": att_files,
                     "model": r[7],
-                    "created_at": str(r[8])[:19] if r[8] else ""
+                    "created_at": created_ts
                 })
         except Exception as e:
             print(f"[ChatHistoryService] Lỗi lấy messages của session '{session_id}': {e}")

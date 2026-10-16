@@ -11,6 +11,7 @@ import json
 import requests
 from typing import Generator, List, Dict, Any, Optional
 from core.config import Config
+from core.model_service import ModelService
 
 import sys
 if hasattr(sys.stdout, 'reconfigure'):
@@ -22,6 +23,7 @@ if hasattr(sys.stderr, 'reconfigure'):
 class LLMService:
     def __init__(self):
         self.ollama_base = Config.OLLAMA_REMOTE_URL
+        self.model_service = ModelService()
 
     def check_ollama_alive(self) -> str:
         """Kiểm tra URL Ollama nào đang hoạt động."""
@@ -35,58 +37,13 @@ class LLMService:
         return Config.OLLAMA_REMOTE_URL
 
     def get_available_models(self) -> List[Dict[str, Any]]:
-        """Lấy danh sách các mô hình Ollama thực tế từ máy chủ, định dạng thân thiện cho UI."""
-        active_url = self.check_ollama_alive()
+        """Lấy danh sách các mô hình hoạt động từ ModelService (Neon DB system_models)."""
         try:
-            res = requests.get(f"{active_url}/api/tags", timeout=4, verify=False)
-            if res.status_code == 200:
-                tags = res.json().get("models", [])
-                result = []
-                # Các model loại trừ vì là embedding
-                exclude_keywords = ["embed", "bge-m3", "nomic-embed"]
-
-                for m in tags:
-                    name = m.get("name", "")
-                    if any(k in name.lower() for k in exclude_keywords):
-                        continue
-
-                    is_multimodal = any(k in name.lower() for k in ["vl", "vision", "ocr", "gemma4"])
-                    display_name = name
-                    if "qwen2.5:14b" in name.lower():
-                        display_name = "Qwen 2.5 14B (Mặc định - Thông minh, Tiếng Việt tốt)"
-                    elif "qwen2.5vl:7b" in name.lower():
-                        display_name = "Qwen 2.5-VL 7B (Đa phương thức & Thị giác Multimodal)"
-                    elif "qwen2.5:32b" in name.lower():
-                        display_name = "Qwen 2.5 32B (Mô hình lớn, Suy luận chuyên sâu)"
-                    elif "deepseek-r1:8b" in name.lower():
-                        display_name = "DeepSeek R1 8B (Suy luận logic & CoT Reasoning)"
-                    elif "llama3.1:latest" in name.lower():
-                        display_name = "Llama 3.1 8B (Meta AI)"
-                    elif "llama3.2:latest" in name.lower():
-                        display_name = "Llama 3.2 (Gọn nhẹ, Tốc độ cao)"
-                    elif "glm-4.7-flash" in name.lower():
-                        display_name = "GLM 4.7 Flash (Tốc độ phản hồi cực nhanh)"
-                    elif "granite3.2-vision" in name.lower():
-                        display_name = "IBM Granite 3.2 Vision (Nhận diện hình ảnh)"
-                    elif "mistral:latest" in name.lower():
-                        display_name = "Mistral 7B (Đa dụng)"
-                    elif "deepseek-coder:6.7b" in name.lower():
-                        display_name = "DeepSeek Coder 6.7B (Chuyên lập trình)"
-
-                    result.append({
-                        "id": name,
-                        "name": display_name,
-                        "provider": "ollama",
-                        "multimodal": is_multimodal,
-                        "default": name == "qwen2.5:14b"
-                    })
-
-                # Đưa qwen2.5:14b lên đầu
-                result.sort(key=lambda x: (not x.get("default", False), x["name"]))
-                if result:
-                    return result
+            models = self.model_service.get_models()
+            if models:
+                return models
         except Exception as e:
-            print(f"[LLMService] Khong the tai danh sach model truc tiep tu Ollama: {e}")
+            print(f"[LLMService] Lỗi khi tải mô hình từ ModelService: {e}")
 
         return Config.AVAILABLE_MODELS
 

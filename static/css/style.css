@@ -139,90 +139,149 @@ body.dark-theme *::-webkit-scrollbar-thumb:hover {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.75rem 1.5rem;
+    padding: 0.55rem 1.25rem;
     background-color: var(--bg-surface);
     border-bottom: 1px solid var(--border-color);
     box-shadow: var(--shadow-sm);
     z-index: 100;
+    gap: 0.75rem;
+    min-height: 56px;
 }
 
 .brand {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.65rem;
+    flex-shrink: 0;
 }
 
 .brand-logo {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
+    width: 34px;
+    height: 34px;
     background: linear-gradient(135deg, var(--primary), var(--accent));
     color: white;
     border-radius: var(--radius-md);
-    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.2);
+    flex-shrink: 0;
+}
+
+.brand-logo svg {
+    width: 19px;
+    height: 19px;
 }
 
 .brand-info h1 {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     font-weight: 700;
     letter-spacing: -0.02em;
     color: var(--text-primary);
+    line-height: 1.2;
+    white-space: nowrap;
 }
 
 .brand-subtitle {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     color: var(--text-muted);
     font-weight: 500;
     display: block;
+    line-height: 1.2;
+    white-space: nowrap;
 }
 
-/* Navigation Tabs */
+/* Navigation Tabs: Tối ưu thanh hiển thị thoáng đãng, hiện đại */
 .nav-tabs {
-    display: flex;
-    gap: 0.35rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
     background-color: var(--bg-surface-elevated);
-    padding: 4px;
-    border-radius: var(--radius-full);
-    border: 1px solid var(--border-color);
+    padding: 4px 6px;
+    border-radius: 9999px;
+    border: 1.5px solid var(--border-color);
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    flex-shrink: 1;
+}
+
+.nav-tabs::-webkit-scrollbar {
+    display: none;
 }
 
 .tab-btn {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 0.45rem;
-    padding: 0.45rem 1rem;
+    gap: 0.38rem;
+    padding: 0.38rem 0.82rem;
     font-family: var(--font-main);
-    font-size: 0.84rem;
-    font-weight: 600;
+    font-size: 0.8125rem;
+    font-weight: 550;
     color: var(--text-secondary);
     background: transparent;
     border: none;
-    border-radius: var(--radius-full);
+    border-radius: 9999px;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    flex-shrink: 0;
+    line-height: 1.35;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+}
+
+.tab-btn svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    opacity: 0.82;
+    transition: transform 0.16s ease, opacity 0.16s ease;
 }
 
 .tab-btn:hover {
     color: var(--text-primary);
-    background: rgba(0, 0, 0, 0.04);
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 9999px;
+}
+
+.tab-btn:hover svg {
+    opacity: 1;
+    transform: translateY(-0.5px);
 }
 
 body.dark-theme .tab-btn:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .tab-btn.active {
     background-color: var(--primary);
-    color: white;
-    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);
+    color: #ffffff;
+    font-weight: 600;
+    border-radius: 9999px;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.32);
+}
+
+.tab-btn.active svg {
+    opacity: 1;
+    stroke-width: 2.2;
+}
+
+body.dark-theme .tab-btn.active {
+    box-shadow: 0 2px 10px rgba(99, 102, 241, 0.38);
 }
 
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+#header-admin-models-btn {
+    display: none !important;
 }
 
 .icon-btn {
@@ -1071,19 +1130,71 @@ body.dark-theme .katex-display {
     flex-wrap: wrap;
 }
 
+/* Bộ chọn mô hình: Thiết kế Capsule Bo Tròn Cao Cấp */
 .dock-model-picker {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 0.45rem;
+    gap: 0.35rem;
+    background: var(--bg-surface-elevated);
+    border: 1.5px solid var(--border-color);
+    border-radius: 9999px;
+    padding: 2px 6px 2px 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dock-model-picker:hover {
+    border-color: rgba(79, 70, 229, 0.45);
+    background: var(--bg-surface);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);
+}
+
+.dock-model-picker:focus-within {
+    border-color: var(--primary);
+    background: var(--bg-surface);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.16);
 }
 
 .dock-label {
     font-size: 0.78rem;
     font-weight: 600;
     color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    user-select: none;
 }
 
-.dock-select,
+.dock-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: transparent;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    border: none;
+    border-radius: 9999px;
+    padding: 0.35rem 1.8rem 0.35rem 0.3rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    outline: none;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    max-width: 320px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dock-select option {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+    padding: 8px 12px;
+    font-size: 0.85rem;
+}
+
 .custom-select {
     appearance: none;
     -webkit-appearance: none;
@@ -1092,8 +1203,8 @@ body.dark-theme .katex-display {
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
     border: 1.5px solid var(--border-color);
-    border-radius: 14px;
-    padding: 0.38rem 2.2rem 0.38rem 0.85rem;
+    border-radius: 9999px;
+    padding: 0.4rem 2.2rem 0.4rem 1rem;
     font-size: 0.82rem;
     font-weight: 600;
     color: var(--text-primary);
@@ -1101,18 +1212,52 @@ body.dark-theme .katex-display {
     outline: none;
     font-family: inherit;
     transition: all 0.2s ease;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
-.dock-select:focus,
+.custom-select:hover {
+    border-color: rgba(79, 70, 229, 0.4);
+    background-color: var(--bg-surface);
+}
+
 .custom-select:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+    background-color: var(--bg-surface);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.14);
+}
+
+.custom-select option {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+    padding: 8px 12px;
+}
+
+body.dark-theme .dock-model-picker {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+body.dark-theme .dock-model-picker:hover {
+    border-color: #6366f1;
+    background: #0f172a;
+}
+
+body.dark-theme .dock-model-picker:focus-within {
+    border-color: #6366f1;
+    background: #0f172a;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
 body.dark-theme .dock-select,
 body.dark-theme .custom-select {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    color: #f1f5f9;
+}
+
+body.dark-theme .dock-select option,
+body.dark-theme .custom-select option {
+    background-color: #1e293b;
+    color: #f1f5f9;
 }
 
 .dock-actions-right {
@@ -1132,19 +1277,21 @@ body.dark-theme .custom-select {
     align-items: center;
     font-size: 0.78rem;
     font-weight: 600;
-    padding: 0.3rem 0.8rem;
-    border-radius: 20px;
+    padding: 0.32rem 0.85rem;
+    border-radius: 9999px;
     border: 1.5px solid var(--border-color);
     background: var(--bg-surface-elevated);
     color: var(--text-secondary);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     user-select: none;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 .pill-radio:hover {
     border-color: rgba(79, 70, 229, 0.35);
-    background: var(--bg-surface-hover);
+    background: var(--bg-surface);
+    color: var(--text-primary);
 }
 
 .pill-radio input {
@@ -1155,7 +1302,7 @@ body.dark-theme .custom-select {
     background: var(--primary-light);
     color: var(--primary);
     border-color: var(--primary);
-    box-shadow: 0 1px 3px rgba(79, 70, 229, 0.15);
+    box-shadow: 0 1px 4px rgba(79, 70, 229, 0.18);
 }
 
 .dock-tool-btn {
@@ -1244,6 +1391,87 @@ body.dark-theme .custom-select {
     transform: scale(1.15);
 }
 
+/* Attached File Pill in Dock Preview */
+.attached-file-pill {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 0.35rem 0.65rem;
+    max-width: 260px;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.attached-file-pill:hover {
+    border-color: var(--primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.attached-file-pill.loading {
+    opacity: 0.8;
+    background: var(--bg-surface-elevated);
+    border-style: dashed;
+}
+
+.attached-file-pill .file-icon-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.attached-file-pill .file-info-col {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.25;
+}
+
+.attached-file-pill .file-name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+.attached-file-pill .file-meta {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+}
+
+.attached-file-pill .remove-attach-btn {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ef4444;
+    color: #ffffff;
+    border: 1.5px solid #ffffff;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    line-height: 1;
+    transition: transform 0.15s;
+}
+
+.attached-file-pill .remove-attach-btn:hover {
+    transform: scale(1.15);
+}
+
 .user-attached-thumbnails {
     display: flex;
     flex-wrap: wrap;
@@ -1263,6 +1491,70 @@ body.dark-theme .custom-select {
 
 .user-thumb:hover {
     transform: scale(1.06);
+}
+
+/* User Message Attached Files Badges */
+.user-attached-files-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.45rem;
+}
+
+.user-file-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 10px;
+    padding: 0.35rem 0.65rem;
+    backdrop-filter: blur(4px);
+    color: inherit;
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.user-file-badge:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.22);
+}
+
+.user-file-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #ffffff;
+}
+
+.user-file-details {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.25;
+}
+
+.user-file-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    max-width: 220px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-file-meta {
+    font-size: 0.68rem;
+    opacity: 0.85;
+}
+
+/* Drag over style on dock textarea */
+.dock-input-wrapper textarea.drag-over {
+    border-color: var(--primary) !important;
+    background: var(--primary-light) !important;
 }
 
 .dock-input-wrapper {
@@ -1776,20 +2068,27 @@ body.dark-theme .doc-badge-sm {
 }
 
 .subtab-btn {
-    padding: 0.4rem 0.85rem;
+    padding: 0.38rem 0.95rem;
     font-size: 0.82rem;
     font-weight: 600;
     color: var(--text-secondary);
     background: transparent;
     border: none;
-    border-radius: 6px;
+    border-radius: 9999px;
     cursor: pointer;
     font-family: inherit;
+    transition: all 0.16s ease;
+}
+
+.subtab-btn:hover {
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--text-primary);
 }
 
 .subtab-btn.active {
     background: var(--primary-light);
     color: var(--primary);
+    box-shadow: 0 1px 4px rgba(79, 70, 229, 0.15);
 }
 
 .subtab-content {
@@ -2552,11 +2851,78 @@ body.dark-theme .doc-badge-sm {
     }
 }
 
-@media (max-width: 768px) {
-    .header-content {
-        flex-wrap: wrap;
+@media (max-width: 1380px) {
+    .brand-subtitle {
+        display: none;
+    }
+    .brand-info h1 {
+        font-size: 1rem;
+    }
+    .top-nav {
+        padding: 0.5rem 1rem;
         gap: 0.6rem;
+    }
+    .tab-btn {
+        padding: 0.35rem 0.65rem;
+        font-size: 0.78rem;
+        gap: 0.3rem;
+        border-radius: 9999px;
+    }
+    .tab-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+}
+
+@media (max-width: 1120px) {
+    .history-toggle-btn span {
+        display: none;
+    }
+    .top-nav {
+        padding: 0.45rem 0.85rem;
+        gap: 0.5rem;
+    }
+    .tab-btn {
+        padding: 0.32rem 0.6rem;
+        font-size: 0.76rem;
+        border-radius: 9999px;
+    }
+}
+
+@media (max-width: 992px) {
+    .top-nav {
+        flex-wrap: wrap;
         padding: 0.5rem 0.85rem;
+        gap: 0.5rem;
+    }
+    .nav-tabs {
+        order: 3;
+        width: 100%;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        display: flex;
+        gap: 0.3rem;
+        padding: 4px 6px;
+        border-radius: 9999px;
+    }
+    .nav-tabs::-webkit-scrollbar {
+        display: none;
+    }
+    .tab-btn {
+        padding: 0.35rem 0.7rem;
+        font-size: 0.78rem;
+        flex-shrink: 0;
+        border-radius: 9999px;
+    }
+}
+
+@media (max-width: 768px) {
+    .top-nav {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.45rem 0.75rem;
     }
 
     .brand-title {
@@ -2570,18 +2936,20 @@ body.dark-theme .doc-badge-sm {
         white-space: nowrap;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
-        padding-bottom: 0.2rem;
         display: flex;
-        gap: 0.4rem;
+        gap: 0.3rem;
+        padding: 3px 5px;
+        border-radius: 9999px;
     }
     .nav-tabs::-webkit-scrollbar {
         display: none;
     }
 
     .tab-btn {
-        padding: 0.4rem 0.75rem;
-        font-size: 0.78rem;
+        padding: 0.32rem 0.65rem;
+        font-size: 0.76rem;
         flex-shrink: 0;
+        border-radius: 9999px;
     }
 
     .dock-controls-bar {
@@ -4574,7 +4942,7 @@ body.dark-theme .doc-badge-sm {
     border: 1px solid #cbd5e1;
     background: #ffffff;
     color: #475569;
-    border-radius: 6px;
+    border-radius: 9999px;
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
@@ -4585,6 +4953,7 @@ body.dark-theme .doc-badge-sm {
     background: #107c41;
     color: #ffffff;
     border-color: #107c41;
+    box-shadow: 0 1px 4px rgba(16, 124, 65, 0.25);
 }
 
 /* PPTX Slide Studio Layout */
@@ -4720,7 +5089,1576 @@ body.dark-theme .doc-badge-sm {
     }
 }
 
+/* ==========================================================================
+   ROLEPLAY (NHẬP VAI AI) - ELEGANT WHITE CHARACTER HUB & CHAT ARENA
+   Giao diện màu trắng thanh lịch, đồng bộ thiết kế toàn hệ thống HPU2 AI
+   ========================================================================== */
+
+#tab-roleplay {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    width: 100%;
+    background: var(--bg-base, #f8fafc);
+    color: var(--text-primary, #0f172a);
+    overflow: hidden;
+    position: relative;
+}
+
+.roleplay-view-pane {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    width: 100%;
+    overflow-y: auto;
+}
+
+/* ==========================================================================
+   VIEW 1: CHARACTER HUB GALLERY
+   ========================================================================== */
+#roleplay-view-hub {
+    padding: 24px 32px;
+    gap: 20px;
+}
+
+/* 1. HERO BANNER CARD */
+.roleplay-hero-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 18px;
+    padding: 28px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+    position: relative;
+    overflow: hidden;
+}
+
+.roleplay-hero-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 320px;
+    height: 100%;
+    background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.08), transparent 70%);
+    pointer-events: none;
+}
+
+.roleplay-hero-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 780px;
+    position: relative;
+    z-index: 1;
+}
+
+.roleplay-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    color: #4f46e5;
+    font-size: 0.78rem;
+    font-weight: 600;
+    width: fit-content;
+}
+
+.badge-dot-live {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+    animation: livePulse 2s infinite ease-in-out;
+}
+
+@keyframes livePulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.7; }
+}
+
+.roleplay-hero-info h2 {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+.roleplay-hero-info p {
+    font-size: 0.92rem;
+    color: #64748b;
+    line-height: 1.55;
+    margin: 0;
+}
+
+.roleplay-hero-tags {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.hero-tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    color: #475569;
+    font-weight: 500;
+}
+
+.hero-tag-chip code {
+    background: #e2e8f0;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: #4f46e5;
+}
+
+.roleplay-hero-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.roleplay-hero-buttons .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+/* 2. TOOLBAR CARD */
+.roleplay-toolbar-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 14px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.roleplay-category-pills {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.roleplay-cat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 16px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 24px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.roleplay-cat-pill:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #0f172a;
+    transform: translateY(-1px);
+}
+
+.roleplay-cat-pill.active {
+    background: #4f46e5;
+    border-color: #4f46e5;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+
+.pill-count {
+    background: rgba(0, 0, 0, 0.08);
+    padding: 1px 7px;
+    border-radius: 12px;
+    font-size: 0.74rem;
+    font-weight: 700;
+}
+
+.roleplay-cat-pill.active .pill-count {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+}
+
+.roleplay-search-sort-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.roleplay-search-input-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 8px 14px;
+    width: 290px;
+    color: #94a3b8;
+    transition: all 0.2s;
+}
+
+.roleplay-search-input-box:focus-within {
+    background: #ffffff;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+    color: #4f46e5;
+}
+
+.roleplay-search-input-box input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 0.85rem;
+    color: #0f172a;
+    width: 100%;
+}
+
+.roleplay-search-input-box input::placeholder {
+    color: #94a3b8;
+}
+
+.roleplay-sort-select-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.roleplay-select-clean {
+    border: 1.5px solid #e2e8f0;
+    background: #ffffff;
+    border-radius: 9999px;
+    padding: 6px 16px;
+    font-size: 0.82rem;
+    color: #334155;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.roleplay-select-clean:hover {
+    border-color: rgba(79, 70, 229, 0.4);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.roleplay-select-clean:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+}
+
+/* 3. CARDS GRID & CARD DESIGN */
+.roleplay-grid-deck {
+    width: 100%;
+    margin-bottom: 24px;
+}
+
+.roleplay-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 22px;
+    width: 100%;
+}
+
+.roleplay-grid-loading {
+    grid-column: 1 / -1;
+    padding: 60px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: #64748b;
+    font-size: 0.92rem;
+}
+
+.roleplay-char-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+}
+
+.roleplay-char-card:hover {
+    transform: translateY(-6px);
+    border-color: #c7d2fe;
+    box-shadow: 0 16px 32px -6px rgba(79, 70, 229, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.04);
+}
+
+.roleplay-card-cover {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    position: relative;
+    background: #f1f5f9;
+    overflow: hidden;
+}
+
+.roleplay-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    display: block;
+}
+
+.roleplay-char-card:hover .roleplay-card-img {
+    transform: scale(1.05);
+}
+
+.roleplay-card-overlay-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: rgba(15, 23, 42, 0.72);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.roleplay-card-temp-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 9px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #0f172a;
+    font-size: 0.72rem;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.roleplay-card-body {
+    padding: 16px 18px 12px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+    min-width: 0;
+}
+
+.roleplay-card-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.roleplay-card-title {
+    font-size: 1.05rem;
+    font-weight: 750;
+    color: #0f172a;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: -0.01em;
+}
+
+.roleplay-char-card:hover .roleplay-card-title {
+    color: #4f46e5;
+}
+
+.roleplay-card-author {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.roleplay-card-author .author-name {
+    color: #64748b;
+    font-weight: 600;
+}
+
+.roleplay-card-tagline {
+    font-size: 0.82rem;
+    color: #475569;
+    margin: 6px 0 0 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.45;
+    min-height: 2.9em;
+}
+
+.roleplay-card-footer {
+    padding: 10px 18px;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fafbfc;
+    font-size: 0.78rem;
+    color: #64748b;
+}
+
+.roleplay-card-chat-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.roleplay-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.roleplay-card-btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    background: #4f46e5;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.roleplay-card-btn-action:hover {
+    background: #4338ca;
+    transform: translateX(1px);
+}
+
+.roleplay-card-btn-del {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 5px 7px;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.roleplay-card-btn-del:hover {
+    color: #ef4444;
+    background: #fee2e2;
+}
+
+/* ==========================================================================
+   VIEW 2: DEDICATED CHAT ARENA
+   ========================================================================== */
+#roleplay-view-chat {
+    background: #f8fafc;
+}
+
+.roleplay-arena-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+    background: #ffffff;
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+    gap: 16px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+    z-index: 5;
+}
+
+.arena-left-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+}
+
+.roleplay-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #0f172a;
+    font-size: 0.84rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.roleplay-back-btn:hover {
+    background: #e2e8f0;
+    border-color: #cbd5e1;
+    transform: translateX(-2px);
+}
+
+.arena-char-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.arena-char-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 2px solid #4f46e5;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+}
+
+.arena-char-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.arena-char-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.arena-char-title-row h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.badge-char-tag {
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: rgba(99, 102, 241, 0.1);
+    color: #4f46e5;
+    font-weight: 600;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.arena-char-tagline {
+    font-size: 0.78rem;
+    color: #64748b;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 360px;
+}
+
+.arena-right-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.roleplay-model-picker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 9999px;
+    padding: 4px 14px;
+    color: #475569;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.roleplay-model-picker:hover {
+    border-color: rgba(79, 70, 229, 0.4);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.08);
+}
+
+.roleplay-model-picker:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.14);
+}
+
+.roleplay-model-picker svg {
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+.roleplay-model-picker select {
+    border: none;
+    background: transparent;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #0f172a;
+    outline: none;
+    cursor: pointer;
+    padding-right: 4px;
+}
+
+/* DRAWERS */
+.roleplay-drawer {
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 16px 28px;
+    animation: drawerSlide 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+@keyframes drawerSlide {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.drawer-inner-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 16px;
+}
+
+.param-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.param-label-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+.param-label-row strong {
+    color: #4f46e5;
+}
+
+.param-item input[type="range"] {
+    width: 100%;
+    accent-color: #4f46e5;
+    cursor: pointer;
+}
+
+.param-hint {
+    font-size: 0.72rem;
+    color: #64748b;
+}
+
+.bio-drawer-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.bio-section h4 {
+    margin: 0 0 4px 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.bio-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.82rem;
+    color: #334155;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    max-height: 100px;
+    overflow-y: auto;
+}
+
+/* MESSAGES FEED */
+.roleplay-messages-feed {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    scroll-behavior: smooth;
+    background: #f8fafc;
+}
+
+.roleplay-msg-row {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    max-width: 920px;
+    margin: 0 auto;
+    animation: fadeInMsg 0.22s ease-out;
+}
+
+@keyframes fadeInMsg {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.roleplay-msg-row.user {
+    justify-content: flex-end;
+}
+
+.roleplay-msg-row.assistant {
+    justify-content: flex-start;
+}
+
+.roleplay-msg-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+    margin-top: 2px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.roleplay-char-bubble {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px 18px 18px 4px;
+    padding: 14px 18px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    max-width: 82%;
+    color: #0f172a;
+    line-height: 1.6;
+    word-break: break-word;
+    font-size: 0.95rem;
+}
+
+.roleplay-user-bubble {
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+    color: #ffffff;
+    border-radius: 18px 18px 4px 18px;
+    padding: 13px 18px;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
+    max-width: 82%;
+    line-height: 1.6;
+    word-break: break-word;
+    font-size: 0.95rem;
+}
+
+.roleplay-user-bubble p {
+    margin: 0;
+    color: #ffffff;
+}
+
+/* ASTERISK ACTION STYLING (*hành động*) */
+.roleplay-action {
+    color: #4f46e5;
+    font-style: italic;
+    font-weight: 500;
+    background: rgba(99, 102, 241, 0.08);
+    padding: 1px 6px;
+    border-radius: 4px;
+    display: inline;
+}
+
+/* INPUT DOCK */
+.roleplay-input-dock {
+    padding: 14px 24px 18px 24px;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+.roleplay-input-bar {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 16px;
+    padding: 8px 14px;
+    transition: all 0.2s ease;
+    max-width: 920px;
+    margin: 0 auto;
+}
+
+.roleplay-input-bar:focus-within {
+    border-color: #4f46e5;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+}
+
+.roleplay-input-bar textarea {
+    flex: 1;
+    border: none;
+    background: transparent;
+    resize: none;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: #0f172a;
+    outline: none;
+    max-height: 140px;
+    min-height: 24px;
+    line-height: 1.5;
+}
+
+.roleplay-send-btn {
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #4f46e5;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+    transition: all 0.15s ease;
+}
+
+.roleplay-send-btn:hover {
+    background: #4338ca;
+    transform: scale(1.05);
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.45);
+}
+
+.roleplay-input-hint {
+    margin-top: 8px;
+    text-align: center;
+    font-size: 0.75rem;
+    color: #64748b;
+    max-width: 920px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.roleplay-input-hint code {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    color: #4f46e5;
+}
+
+/* ==========================================================================
+   CREATE CHARACTER MODAL STYLES
+   ========================================================================== */
+.roleplay-modal-card {
+    max-width: 620px;
+    width: 95%;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.12);
+    border-radius: 16px;
+    color: #0f172a;
+}
+
+.roleplay-form-body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px 24px;
+    max-height: 78vh;
+    overflow-y: auto;
+}
+
+.roleplay-form-body .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.roleplay-form-body label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+.roleplay-form-body input[type="text"],
+.roleplay-form-body textarea {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #0f172a;
+    font-size: 0.88rem;
+    outline: none;
+    transition: all 0.15s;
+}
+
+.roleplay-form-body input[type="text"]:focus,
+.roleplay-form-body textarea:focus {
+    background: #ffffff;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+}
+
+.roleplay-form-body input[type="range"] {
+    accent-color: #4f46e5;
+    cursor: pointer;
+}
+
+/* ==========================================================================
+   DARK THEME COMPATIBILITY FOR ROLEPLAY
+   ========================================================================== */
+body.dark-theme #tab-roleplay {
+    background: #0f172a;
+    color: #f1f5f9;
+}
+
+body.dark-theme .roleplay-hero-card,
+body.dark-theme .roleplay-toolbar-card,
+body.dark-theme .roleplay-char-card,
+body.dark-theme .roleplay-arena-topbar,
+body.dark-theme .roleplay-drawer,
+body.dark-theme .roleplay-input-dock,
+body.dark-theme .roleplay-modal-card {
+    background: #1e293b;
+    border-color: #334155;
+    color: #f1f5f9;
+}
+
+body.dark-theme .roleplay-hero-info h2,
+body.dark-theme .roleplay-card-title,
+body.dark-theme .arena-char-title-row h3,
+body.dark-theme .bio-section h4 {
+    color: #f8fafc;
+}
+
+body.dark-theme .roleplay-hero-info p,
+body.dark-theme .roleplay-card-tagline,
+body.dark-theme .arena-char-tagline,
+body.dark-theme .param-label-row,
+body.dark-theme .roleplay-form-body label {
+    color: #94a3b8;
+}
+
+body.dark-theme .roleplay-cat-pill {
+    background: #1e293b;
+    border-color: #334155;
+    color: #94a3b8;
+}
+
+body.dark-theme .roleplay-cat-pill:hover {
+    background: #334155;
+    color: #f8fafc;
+}
+
+body.dark-theme .roleplay-cat-pill.active {
+    background: #4f46e5;
+    border-color: #4f46e5;
+    color: #ffffff;
+}
+
+body.dark-theme .roleplay-search-input-box,
+body.dark-theme .roleplay-select-clean,
+body.dark-theme .hero-tag-chip,
+body.dark-theme .roleplay-back-btn,
+body.dark-theme .roleplay-model-picker,
+body.dark-theme .bio-box,
+body.dark-theme .roleplay-form-body input[type="text"],
+body.dark-theme .roleplay-form-body textarea {
+    background: #0f172a;
+    border-color: #334155;
+    color: #f1f5f9;
+}
+
+body.dark-theme .roleplay-search-input-box input {
+    color: #f1f5f9;
+}
+
+body.dark-theme .roleplay-card-footer {
+    background: #172033;
+    border-top-color: #334155;
+}
+
+body.dark-theme .roleplay-char-bubble {
+    background: #1e293b;
+    border-color: #334155;
+    color: #f1f5f9;
+}
+
+body.dark-theme .roleplay-input-bar {
+    background: #0f172a;
+    border-color: #334155;
+}
+
+body.dark-theme .roleplay-input-bar textarea {
+    color: #f8fafc;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN (BREAKPOINTS)
+   ========================================================================== */
+@media (max-width: 1200px) {
+    #roleplay-view-hub {
+        padding: 20px 24px;
+    }
+    .roleplay-hero-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .roleplay-hero-buttons {
+        flex-direction: row;
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    #roleplay-view-hub {
+        padding: 16px;
+    }
+    .roleplay-cards-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 14px;
+    }
+    .roleplay-search-input-box {
+        width: 100%;
+    }
+    .roleplay-search-sort-wrap {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .arena-char-tagline {
+        max-width: 180px;
+    }
+}
+
+@media (max-width: 480px) {
+    .roleplay-cards-grid {
+        grid-template-columns: 1fr;
+    }
+}
 
 
+/* ==========================================================================
+   ADMIN MODEL MANAGEMENT STYLES
+   ========================================================================== */
+.admin-models-hero-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 24px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    margin-bottom: 20px;
+}
+
+.admin-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(2, 132, 199, 0.08);
+    color: #0284c7;
+    border: 1px solid rgba(2, 132, 199, 0.2);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+}
+
+.pulse-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #0284c7;
+    animation: pulse 1.8s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.9); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.5; }
+    100% { transform: scale(0.9); opacity: 1; }
+}
+
+.admin-models-hero-main h2 {
+    margin: 0 0 8px 0;
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.admin-models-hero-main p {
+    margin: 0;
+    font-size: 0.88rem;
+    color: #64748b;
+    max-width: 760px;
+    line-height: 1.5;
+}
+
+.admin-models-hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.admin-models-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.admin-stat-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.stat-icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.stat-data {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.stat-num {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.stat-num.truncate-stat {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 170px;
+}
+
+.stat-label {
+    font-size: 0.76rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.admin-models-layout {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+.admin-models-column {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px 22px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+}
+
+.admin-column-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    gap: 12px;
+}
+
+.col-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.col-title-wrap h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.admin-tag-badge {
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid #e2e8f0;
+}
+
+.col-subdesc {
+    margin: 0 0 14px 0;
+    font-size: 0.8rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.admin-search-input {
+    padding: 7px 16px;
+    border-radius: 9999px;
+    border: 1.5px solid #cbd5e1;
+    font-size: 0.82rem;
+    outline: none;
+    background: #f8fafc;
+    width: 220px;
+    transition: all 0.2s ease;
+}
+
+.admin-search-input:focus {
+    border-color: #0284c7;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+}
+
+.admin-models-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.admin-model-item-card {
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.admin-model-item-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+}
+
+.admin-model-item-card.is-default {
+    background: #f0fdf4;
+    border-color: #86efac;
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.1);
+}
+
+.model-item-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 0;
+}
+
+.model-chip-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.model-info-wrap {
+    min-width: 0;
+}
+
+.model-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+
+.model-item-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.model-tag-id {
+    font-size: 0.76rem;
+    font-family: monospace;
+    font-weight: 600;
+    background: #e2e8f0;
+    color: #334155;
+    padding: 2px 10px;
+    border-radius: 9999px;
+}
+
+.badge-default {
+    background: #22c55e;
+    color: #ffffff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 9999px;
+    text-transform: uppercase;
+}
+
+.badge-vision {
+    background: #a855f7;
+    color: #ffffff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 9999px;
+    text-transform: uppercase;
+}
+
+.model-desc-text {
+    font-size: 0.78rem;
+    color: #64748b;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 380px;
+}
+
+.model-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.admin-model-item-card .btn,
+.admin-ollama-item .btn {
+    border-radius: 9999px;
+    padding: 4px 12px;
+    font-weight: 600;
+    transition: all 0.16s ease;
+}
+
+.admin-ollama-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.admin-ollama-item {
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 11px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.admin-ollama-item:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.ollama-tag-name {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #0284c7;
+    background: rgba(2, 132, 199, 0.08);
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-family: monospace;
+}
+
+.ollama-size-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #64748b;
+    background: #e2e8f0;
+    padding: 3px 8px;
+    border-radius: 9999px;
+    margin-left: 6px;
+}
+
+.admin-loading-placeholder {
+    text-align: center;
+    padding: 28px;
+    color: #64748b;
+    font-size: 0.88rem;
+}
+
+/* Dark mode */
+body.dark-theme .admin-models-hero-card,
+body.dark-theme .admin-stat-card,
+body.dark-theme .admin-models-column {
+    background: #1e293b;
+    border-color: #334155;
+    color: #f1f5f9;
+}
+
+body.dark-theme .admin-models-hero-main h2,
+body.dark-theme .col-title-wrap h3,
+body.dark-theme .stat-num,
+body.dark-theme .model-item-title {
+    color: #f8fafc;
+}
+
+body.dark-theme .admin-models-hero-main p,
+body.dark-theme .stat-label,
+body.dark-theme .col-subdesc,
+body.dark-theme .model-desc-text {
+    color: #94a3b8;
+}
+
+body.dark-theme .admin-model-item-card,
+body.dark-theme .admin-ollama-item {
+    background: #0f172a;
+    border-color: #334155;
+}
+
+body.dark-theme .admin-model-item-card.is-default {
+    background: #064e3b;
+    border-color: #059669;
+}
+
+body.dark-theme .admin-search-input {
+    background: #0f172a;
+    border-color: #334155;
+    color: #f8fafc;
+}
+
+body.dark-theme .model-chip-icon {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+body.dark-theme .ollama-tag-name {
+    color: #e2e8f0;
+}
+
+@media (max-width: 900px) {
+    .admin-models-layout {
+        grid-template-columns: 1fr;
+    }
+    .admin-models-hero-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
 
 
+#tab-admin-models {
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100%;
+    min-width: 0;
+    width: 100%;
+    padding: 1.5rem;
+}
+
+.admin-auth-notice-card {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+body.dark-theme .admin-auth-notice-card {
+    background: #451a03;
+    border-color: #78350f;
+}
+
+body.dark-theme .admin-auth-notice-card strong {
+    color: #fef3c7 !important;
+}
+
+body.dark-theme .admin-auth-notice-card span {
+    color: #fde68a !important;
+}

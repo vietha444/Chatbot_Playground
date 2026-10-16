@@ -424,15 +424,36 @@ document.addEventListener("DOMContentLoaded", () => {
     initTheme();
 
     // ---------------------- TABS NAVIGATION ----------------------
+    const navTabsContainer = document.querySelector(".nav-tabs");
+    if (navTabsContainer) {
+        navTabsContainer.addEventListener("wheel", (e) => {
+            if (e.deltaY !== 0 && navTabsContainer.scrollWidth > navTabsContainer.clientWidth) {
+                e.preventDefault();
+                navTabsContainer.scrollLeft += e.deltaY;
+            }
+        }, { passive: false });
+    }
+
     tabBtns.forEach(btn => {
         btn.addEventListener("click", () => {
             const targetId = btn.getAttribute("data-tab");
             tabBtns.forEach(b => b.classList.remove("active"));
-            tabContents.forEach(c => c.classList.remove("active"));
+            tabContents.forEach(c => {
+                c.classList.remove("active");
+                c.style.display = "none";
+            });
             btn.classList.add("active");
 
+            // Cuộn tab đã chọn vào giữa màn hình nếu thanh tab bị cuộn
+            try {
+                btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+            } catch (_) {}
+
             const targetSection = document.getElementById(targetId);
-            if (targetSection) targetSection.classList.add("active");
+            if (targetSection) {
+                targetSection.classList.add("active");
+                targetSection.style.display = "flex";
+            }
 
             if (targetId === "tab-documents") {
                 loadDocumentsList();
@@ -440,8 +461,22 @@ document.addEventListener("DOMContentLoaded", () => {
             if (targetId === "tab-office") {
                 loadOfficeFilesList();
             }
+            if (targetId === "tab-roleplay") {
+                initRoleplay();
+            }
+            if (targetId === "tab-admin-models") {
+                initAdminModels();
+            }
         });
     });
+
+    const headerAdminModelsBtn = document.getElementById("header-admin-models-btn");
+    if (headerAdminModelsBtn) {
+        headerAdminModelsBtn.addEventListener("click", () => {
+            const tabNavAdminModels = document.getElementById("tab-nav-admin-models");
+            if (tabNavAdminModels) tabNavAdminModels.click();
+        });
+    }
 
     // Subtabs in OCR
     const subtabBtns = document.querySelectorAll(".subtab-btn");
@@ -477,24 +512,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ---------------------- USER AUTHENTICATION & UI ----------------------
     function updateUserUI() {
+        const tabNavAdminModels = document.getElementById("tab-nav-admin-models");
+        const headerAdminModelsBtn = document.getElementById("header-admin-models-btn");
+
+        // Tab Quản lý LLM luôn hiển thị trên thanh điều hướng để người dùng có thể nhấp vào bất kỳ lúc nào
+        if (tabNavAdminModels) tabNavAdminModels.style.display = "inline-flex";
+
         if (currentUser && currentUser.username && currentUser.username !== "guest") {
             loggedInBox.style.display = "flex";
             if (authButtonsGroup) authButtonsGroup.style.display = "none";
             userDisplayName.textContent = currentUser.username;
 
-            if (currentUser.role === "admin") {
+            const isAdmin = currentUser.role === "admin" || (currentUser.username && currentUser.username.toLowerCase() === "admin");
+            if (isAdmin) {
                 userRoleBadge.textContent = "👑 Quản trị viên";
                 userRoleBadge.className = "user-role-badge admin-badge";
                 if (adminUserFilter) adminUserFilter.style.display = "inline-block";
+                if (headerAdminModelsBtn) headerAdminModelsBtn.style.display = "inline-block";
             } else {
                 userRoleBadge.textContent = "👤 Người dùng";
                 userRoleBadge.className = "user-role-badge user-badge";
                 if (adminUserFilter) adminUserFilter.style.display = "none";
+                if (headerAdminModelsBtn) headerAdminModelsBtn.style.display = "none";
             }
         } else {
             loggedInBox.style.display = "none";
             if (authButtonsGroup) authButtonsGroup.style.display = "flex";
             if (adminUserFilter) adminUserFilter.style.display = "none";
+            if (headerAdminModelsBtn) headerAdminModelsBtn.style.display = "none";
         }
     }
 
@@ -509,6 +554,10 @@ document.addEventListener("DOMContentLoaded", () => {
         loadConfig();
         loadDocumentsList();
         loadHistorySessions();
+        const tabAdminSection = document.getElementById("tab-admin-models");
+        if (tabAdminSection && tabAdminSection.classList.contains("active")) {
+            initAdminModels();
+        }
     }
 
     // Chuyển đổi giữa Đăng Nhập và Đăng Ký (Không cần email)
@@ -700,19 +749,9 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             currentConfig = await res.json();
 
-            // Populate Cả 2 bộ chọn mô hình ở đáy dock: Direct Chat & RAG Chat
+            // Cập nhật tất cả các bộ chọn mô hình trên toàn hệ thống
             if (currentConfig.models) {
-                [selectModelDirect, selectModelRag].forEach(sel => {
-                    if (!sel) return;
-                    sel.innerHTML = "";
-                    currentConfig.models.forEach(m => {
-                        const opt = document.createElement("option");
-                        opt.value = m.id;
-                        opt.textContent = m.name;
-                        if (m.default) opt.selected = true;
-                        sel.appendChild(opt);
-                    });
-                });
+                updateAllModelSelectors(currentConfig.models, currentConfig.default_model);
             }
 
             // Populate Collections cho RAG Selector
@@ -849,7 +888,7 @@ document.addEventListener("DOMContentLoaded", () => {
     /**
      * Tạo bong bóng chat User & Bot với dải màu gradient, avatar tròn, tên người gửi và timestamp
      */
-    function appendMessage(sender, text, container, chatType = "direct", attachedImages = []) {
+    function appendMessage(sender, text, container, chatType = "direct", attachedImages = [], attachedFiles = []) {
         if (!container) return { contentEl: null, metaEl: null, imagesEl: null };
 
         // Nếu container đang chứa hero card chào mừng thì xóa đi khi có tin nhắn đầu tiên
@@ -890,6 +929,30 @@ document.addEventListener("DOMContentLoaded", () => {
             renderRichContent(text || "", contentEl);
 
             msgContent.appendChild(senderTitle);
+
+            // Nếu người dùng có đính kèm tệp văn bản / tài liệu / code
+            if (attachedFiles && attachedFiles.length > 0) {
+                const userFileWrap = document.createElement("div");
+                userFileWrap.className = "user-attached-files-wrap";
+                attachedFiles.forEach(f => {
+                    const info = getFileIcon(f.file_type || f.ext || "");
+                    const fname = f.filename || f.name || "Tệp đính kèm";
+                    const fbadge = document.createElement("div");
+                    fbadge.className = "user-file-badge";
+                    fbadge.title = `${fname} (${info.label})`;
+                    fbadge.innerHTML = `
+                        <div class="user-file-icon" style="background:${info.color}18; color:${info.color};">
+                            ${info.icon}
+                        </div>
+                        <div class="user-file-details">
+                            <span class="user-file-name">${escapeHtml(fname)}</span>
+                            <span class="user-file-meta">${info.label} • ${f.size_str || ''}${f.pages && f.pages > 1 ? ` • ${f.pages} trang` : ''}</span>
+                        </div>
+                    `;
+                    userFileWrap.appendChild(fbadge);
+                });
+                msgContent.appendChild(userFileWrap);
+            }
 
             // Nếu người dùng có đính kèm ảnh (multimodal query)
             if (attachedImages && attachedImages.length > 0) {
@@ -960,7 +1023,60 @@ document.addEventListener("DOMContentLoaded", () => {
         return { contentEl, metaEl, imagesEl };
     }
 
-    // ---------------------- XỬ LÝ ĐÍNH KÈM HÌNH ẢNH MULTIMODAL ----------------------
+    // ---------------------- HỖ TRỢ ĐỊNH DẠNG ICON VÀ KÍCH THƯỚC FILE ----------------------
+    function getFileIcon(ext) {
+        const e = (ext || "").toLowerCase().replace(".", "");
+        if (["pdf"].includes(e)) {
+            return {
+                icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
+                color: "#ef4444",
+                label: "PDF"
+            };
+        }
+        if (["doc", "docx"].includes(e)) {
+            return {
+                icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>`,
+                color: "#2563eb",
+                label: "DOCX"
+            };
+        }
+        if (["xls", "xlsx", "csv"].includes(e)) {
+            return {
+                icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><rect x="8" y="12" width="8" height="6"></rect></svg>`,
+                color: "#16a34a",
+                label: "EXCEL"
+            };
+        }
+        if (["ppt", "pptx"].includes(e)) {
+            return {
+                icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><circle cx="12" cy="14" r="3"></circle></svg>`,
+                color: "#ea580c",
+                label: "PPTX"
+            };
+        }
+        if (["py", "js", "ts", "html", "css", "c", "cpp", "h", "java", "sql", "sh", "yml", "yaml", "xml", "json"].includes(e)) {
+            return {
+                icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>`,
+                color: "#8b5cf6",
+                label: e.toUpperCase()
+            };
+        }
+        return {
+            icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`,
+            color: "#64748b",
+            label: (e || "FILE").toUpperCase()
+        };
+    }
+
+    function formatBytes(bytes) {
+        if (!bytes || bytes === 0) return "0 B";
+        const k = 1024;
+        const sizes = ["B", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+    }
+
+    // ---------------------- XỬ LÝ ĐÍNH KÈM TỆP VĂN BẢN & HÌNH ẢNH ----------------------
     function setupImageAttachment(type) {
         const fileInput = type === "direct" ? directImageFileInput : ragImageFileInput;
         const btn = type === "direct" ? directAttachImgBtn : ragAttachImgBtn;
@@ -973,47 +1089,120 @@ document.addEventListener("DOMContentLoaded", () => {
         if (fileInput) {
             fileInput.addEventListener("change", (e) => {
                 const files = Array.from(e.target.files || []);
-                files.forEach(file => readAndAttachImage(file, type));
+                files.forEach(file => readAndAttachFile(file, type));
                 fileInput.value = "";
             });
         }
 
-        // Hỗ trợ dán ảnh trực tiếp từ Clipboard (Ctrl + V)
+        // Hỗ trợ dán ảnh hoặc tệp trực tiếp từ Clipboard (Ctrl + V)
         if (textInput) {
             textInput.addEventListener("paste", (e) => {
                 const items = (e.clipboardData || window.clipboardData)?.items || [];
                 for (const item of items) {
-                    if (item.type && item.type.indexOf("image") !== -1) {
+                    if (item.kind === "file") {
                         const file = item.getAsFile();
                         if (file) {
-                            readAndAttachImage(file, type);
+                            readAndAttachFile(file, type);
                         }
                     }
                 }
             });
+
+            // Hỗ trợ Kéo & Thả (Drag and Drop) file trực tiếp vào ô chat
+            textInput.addEventListener("dragover", (e) => {
+                e.preventDefault();
+                textInput.classList.add("drag-over");
+            });
+            textInput.addEventListener("dragleave", (e) => {
+                e.preventDefault();
+                textInput.classList.remove("drag-over");
+            });
+            textInput.addEventListener("drop", (e) => {
+                e.preventDefault();
+                textInput.classList.remove("drag-over");
+                const files = Array.from(e.dataTransfer?.files || []);
+                files.forEach(file => readAndAttachFile(file, type));
+            });
         }
     }
 
-    function readAndAttachImage(file, type) {
-        if (!file || !file.type.startsWith("image/")) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const dataUrl = event.target.result;
-            const b64 = dataUrl.split(",")[1];
-            const imgObj = {
-                name: file.name || `Ảnh dán (${formatTime()})`,
-                base64: b64,
-                url: dataUrl
+    async function readAndAttachFile(file, type) {
+        if (!file) return;
+        const list = type === "direct" ? directAttachedImages : ragAttachedImages;
+
+        // 1. Nếu là ảnh: đọc base64 trực tiếp hiển thị ngay tức thì
+        if (file.type && file.type.startsWith("image/")) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const dataUrl = event.target.result;
+                const b64 = dataUrl.split(",")[1];
+                const imgObj = {
+                    name: file.name || `Ảnh dán (${formatTime()})`,
+                    filename: file.name || `image_${Date.now()}.png`,
+                    file_type: "image",
+                    size: file.size,
+                    size_str: formatBytes(file.size),
+                    base64: b64,
+                    url: dataUrl,
+                    is_image: true
+                };
+                list.push(imgObj);
+                renderAttachedPreviewStrip(type);
             };
-            if (type === "direct") {
-                directAttachedImages.push(imgObj);
-                renderAttachedPreviewStrip("direct");
-            } else {
-                ragAttachedImages.push(imgObj);
-                renderAttachedPreviewStrip("rag");
-            }
+            reader.readAsDataURL(file);
+            return;
+        }
+
+        // 2. Nếu là tài liệu (PDF, Word, Excel, PPTX, Code, Text...)
+        const ext = file.name ? file.name.split(".").pop().toLowerCase() : "";
+        const placeholderItem = {
+            name: file.name || "Tệp đính kèm",
+            filename: file.name || "Tệp đính kèm",
+            file_type: ext,
+            size: file.size,
+            size_str: formatBytes(file.size),
+            is_image: false,
+            loading: true
         };
-        reader.readAsDataURL(file);
+        list.push(placeholderItem);
+        renderAttachedPreviewStrip(type);
+
+        const apiBase = CONFIG.getApiBase();
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const res = await fetch(`${apiBase}/api/chat/parse-file`, {
+                method: "POST",
+                headers: {
+                    "X-User-Name": currentUser.username,
+                    "X-User-Role": currentUser.role
+                },
+                body: formData
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                placeholderItem.loading = false;
+                placeholderItem.filename = data.filename;
+                placeholderItem.name = data.filename;
+                placeholderItem.file_type = data.file_type;
+                placeholderItem.size = data.size;
+                placeholderItem.size_str = data.size_str;
+                placeholderItem.pages = data.pages;
+                placeholderItem.text = data.text;
+                placeholderItem.char_count = data.char_count;
+                placeholderItem.preview = data.preview;
+                renderAttachedPreviewStrip(type);
+            } else {
+                throw new Error(data.error || "Không thể phân tích nội dung tệp.");
+            }
+        } catch (err) {
+            console.error("Lỗi parse file đính kèm:", err);
+            alert(`Lỗi đọc tệp "${file.name}": ${err.message}`);
+            const idx = list.indexOf(placeholderItem);
+            if (idx !== -1) list.splice(idx, 1);
+            renderAttachedPreviewStrip(type);
+        }
     }
 
     function renderAttachedPreviewStrip(type) {
@@ -1031,21 +1220,48 @@ document.addEventListener("DOMContentLoaded", () => {
         previewContainer.style.display = "flex";
         previewContainer.innerHTML = "";
 
-        list.forEach((img, idx) => {
-            const wrap = document.createElement("div");
-            wrap.className = "attached-thumb-wrap";
-            wrap.innerHTML = `
-                <img src="${img.url}" alt="${escapeHtml(img.name)}" />
-                <span class="attach-name" title="${escapeHtml(img.name)}">${escapeHtml(img.name)}</span>
-                <button type="button" class="remove-attach-btn" title="Gỡ ảnh này">&times;</button>
-            `;
-
-            wrap.querySelector(".remove-attach-btn").addEventListener("click", () => {
-                list.splice(idx, 1);
-                renderAttachedPreviewStrip(type);
-            });
-
-            previewContainer.appendChild(wrap);
+        list.forEach((item, idx) => {
+            if (item.loading) {
+                const wrap = document.createElement("div");
+                wrap.className = "attached-file-pill loading";
+                wrap.innerHTML = `
+                    <div class="spinner-sm" style="width:14px; height:14px; border-width:2px; margin:0;"></div>
+                    <span class="file-name">Đang đọc ${escapeHtml(item.name)}...</span>
+                `;
+                previewContainer.appendChild(wrap);
+            } else if (item.is_image) {
+                const wrap = document.createElement("div");
+                wrap.className = "attached-thumb-wrap";
+                wrap.innerHTML = `
+                    <img src="${item.url}" alt="${escapeHtml(item.name)}" />
+                    <span class="attach-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
+                    <button type="button" class="remove-attach-btn" title="Gỡ ảnh này">&times;</button>
+                `;
+                wrap.querySelector(".remove-attach-btn").addEventListener("click", () => {
+                    list.splice(idx, 1);
+                    renderAttachedPreviewStrip(type);
+                });
+                previewContainer.appendChild(wrap);
+            } else {
+                const info = getFileIcon(item.file_type || item.ext || "");
+                const wrap = document.createElement("div");
+                wrap.className = "attached-file-pill";
+                wrap.innerHTML = `
+                    <div class="file-icon-badge" style="background:${info.color}18; color:${info.color};">
+                        ${info.icon}
+                    </div>
+                    <div class="file-info-col">
+                        <span class="file-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
+                        <span class="file-meta">${info.label} • ${item.size_str || ''}${item.pages && item.pages > 1 ? ` • ${item.pages} trang` : ''}</span>
+                    </div>
+                    <button type="button" class="remove-attach-btn" title="Gỡ tệp này">&times;</button>
+                `;
+                wrap.querySelector(".remove-attach-btn").addEventListener("click", () => {
+                    list.splice(idx, 1);
+                    renderAttachedPreviewStrip(type);
+                });
+                previewContainer.appendChild(wrap);
+            }
         });
     }
 
@@ -1134,17 +1350,28 @@ document.addEventListener("DOMContentLoaded", () => {
     async function sendDirectMessage() {
         if (!directChatInput) return;
         const text = directChatInput.value.trim();
-        const hasImages = directAttachedImages.length > 0;
-        if (!text && !hasImages) return;
+        const hasAttachments = directAttachedImages.length > 0;
+        if (!text && !hasAttachments) return;
 
-        const displayText = text || "(Hình ảnh gửi kèm)";
-        const imagesToSend = [...directAttachedImages];
+        const filesToSend = [...directAttachedImages];
         directAttachedImages = [];
         renderAttachedPreviewStrip("direct");
 
+        const imagesToSend = filesToSend.filter(f => f.is_image);
+        const docsToSend = filesToSend.filter(f => !f.is_image);
+
+        let displayText = text;
+        if (!displayText) {
+            if (docsToSend.length > 0) {
+                displayText = `(Tệp đính kèm: ${docsToSend.map(d => d.name || d.filename).join(", ")})`;
+            } else {
+                displayText = "(Hình ảnh gửi kèm)";
+            }
+        }
+
         const selectedModelId = selectModelDirect ? selectModelDirect.value : "qwen2.5:14b";
 
-        appendMessage("user", displayText, directMessagesContainer, "direct", imagesToSend);
+        appendMessage("user", displayText, directMessagesContainer, "direct", imagesToSend, docsToSend);
         notifySessionActivity("direct", displayText);
         directChatInput.value = "";
         directChatInput.style.height = "auto";
@@ -1167,7 +1394,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: JSON.stringify({
                     session_id: currentSessionId,
                     title: displayText.slice(0, 60),
-                    message: displayText,
+                    message: text || displayText,
                     model: selectedModelId,
                     mode: "direct",
                     collections: [],
@@ -1175,7 +1402,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     score_threshold: 0.3,
                     history: directChatHistory,
                     username: currentUser.username,
-                    user_images: imagesToSend.map(img => img.base64)
+                    user_images: imagesToSend.map(img => img.base64).filter(Boolean),
+                    attached_files: filesToSend
                 })
             });
 
@@ -1268,25 +1496,36 @@ document.addEventListener("DOMContentLoaded", () => {
     async function sendRagMessage() {
         if (!ragChatInput) return;
         const text = ragChatInput.value.trim();
-        const hasImages = ragAttachedImages.length > 0;
-        if (!text && !hasImages) return;
+        const hasAttachments = ragAttachedImages.length > 0;
+        if (!text && !hasAttachments) return;
 
         if (selectedCollections.size === 0) {
             alert("⚠️ Vui lòng tích chọn ít nhất 1 tài liệu ở khung bên trái để hệ thống trích xuất tri thức.");
             return;
         }
 
-        const displayText = text || "(Hình ảnh gửi kèm câu hỏi RAG)";
-        const imagesToSend = [...ragAttachedImages];
+        const filesToSend = [...ragAttachedImages];
         ragAttachedImages = [];
         renderAttachedPreviewStrip("rag");
+
+        const imagesToSend = filesToSend.filter(f => f.is_image);
+        const docsToSend = filesToSend.filter(f => !f.is_image);
+
+        let displayText = text;
+        if (!displayText) {
+            if (docsToSend.length > 0) {
+                displayText = `(Tệp đính kèm: ${docsToSend.map(d => d.name || d.filename).join(", ")})`;
+            } else {
+                displayText = "(Hình ảnh gửi kèm câu hỏi RAG)";
+            }
+        }
 
         const selectedRagModeRadio = document.querySelector('input[name="rag-mode"]:checked');
         const selectedMode = selectedRagModeRadio ? selectedRagModeRadio.value : "rag_rerank";
         const selectedModelId = selectModelRag ? selectModelRag.value : "qwen2.5:14b";
         const threshold = rerankerThresholdSlider ? parseFloat(rerankerThresholdSlider.value) : 0.3;
 
-        appendMessage("user", displayText, ragMessagesContainer, "rag", imagesToSend);
+        appendMessage("user", displayText, ragMessagesContainer, "rag", imagesToSend, docsToSend);
         notifySessionActivity("rag", displayText);
         ragChatInput.value = "";
         ragChatInput.style.height = "auto";
@@ -1312,7 +1551,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: JSON.stringify({
                     session_id: currentSessionId,
                     title: displayText.slice(0, 60),
-                    message: displayText,
+                    message: text || displayText,
                     model: selectedModelId,
                     mode: selectedMode,
                     collections: collectionsArray,
@@ -1320,7 +1559,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     score_threshold: threshold,
                     history: ragChatHistory,
                     username: currentUser.username,
-                    user_images: imagesToSend.map(img => img.base64)
+                    user_images: imagesToSend.map(img => img.base64).filter(Boolean),
+                    attached_files: filesToSend
                 })
             });
 
@@ -3075,7 +3315,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 const formattedImages = imagesList.map(img => typeof img === "string" ? { base64: img } : img);
 
                 if (isUser) {
-                    appendMessage("user", m.content, container, isDirect ? "direct" : "rag", formattedImages);
+                    const attachedFilesList = m.attached_files ? (Array.isArray(m.attached_files) ? m.attached_files : [m.attached_files]) : [];
+                    appendMessage("user", m.content, container, isDirect ? "direct" : "rag", formattedImages, attachedFilesList);
                     if (isDirect) directChatHistory.push({ role: "user", content: m.content });
                     else ragChatHistory.push({ role: "user", content: m.content });
                 } else {
@@ -4198,10 +4439,1415 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // ==========================================================================
+    // MODULE: AI ROLEPLAY - ELEGANT WHITE CHARACTER HUB & CHAT ARENA
+    // Đọc & ghi Neon DB, hình minh họa 1:1, thẻ bài tinh tế, SSE Ollama streaming
+    // ==========================================================================
+    let roleplayCharacters = [];
+    let activeRoleplayCharacter = null;
+    let isRoleplayGenerating = false;
+    let activeRoleplaySessionId = null;
+    let currentRoleplayCategory = "all"; // 'all' | 'education' | 'anime' | 'trending'
+
+    function getRoleplayApiBase() {
+        if (typeof CONFIG !== "undefined" && typeof CONFIG.getApiBase === "function") {
+            return CONFIG.getApiBase().replace(/\/+$/, "");
+        }
+        return "http://127.0.0.1:5000";
+    }
+
+    // Ảnh minh họa chất lượng cao đã lưu trữ trong img/characters/
+    const LOCAL_CHARACTER_IMAGES = {
+        "Futaba Igarashi": "img/characters/futaba.jpg",
+        "Frieren": "img/characters/frieren.jpg",
+        "English Teacher": "img/characters/english_teacher.jpg",
+        "Edubot": "img/characters/edubot.jpg",
+        "Aki Sorrel": "img/characters/aki_sorrel.jpg",
+        "Teacher": "img/characters/teacher.jpg"
+    };
+
+    function getFallbackAvatar(name) {
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'AI')}&background=4f46e5&color=fff&size=256`;
+    }
+
+    function getCharacterImage(char) {
+        if (!char) return getFallbackAvatar("AI");
+        if (LOCAL_CHARACTER_IMAGES[char.character_name]) {
+            return LOCAL_CHARACTER_IMAGES[char.character_name];
+        }
+        if (char.linkanh && (char.linkanh.startsWith("http://") || char.linkanh.startsWith("https://") || char.linkanh.startsWith("img/"))) {
+            return char.linkanh;
+        }
+        return getFallbackAvatar(char.character_name);
+    }
+
+    function getCharacterCategory(char) {
+        if (!char) return "general";
+        const name = (char.character_name || "").toLowerCase();
+        const content = (char.content || "").toLowerCase();
+        const persona = (char.persona || "").toLowerCase();
+
+        if (name.includes("teacher") || name.includes("edubot") || content.includes("giáo") || persona.includes("học sinh") || persona.includes("giáo viên") || persona.includes("toán") || persona.includes("tiếng anh") || persona.includes("english")) {
+            return "education";
+        }
+        if (name.includes("futaba") || name.includes("frieren") || name.includes("aki") || persona.includes("anime") || persona.includes("manga") || persona.includes("ma pháp") || persona.includes("senpai")) {
+            return "anime";
+        }
+        return "general";
+    }
+
+    // View Panes
+    const roleplayViewHub = document.getElementById("roleplay-view-hub");
+    const roleplayViewChat = document.getElementById("roleplay-view-chat");
+
+    // Hub Controls
+    const roleplayHeroCount = document.getElementById("roleplay-hero-count");
+    const roleplayBtnCreateChar = document.getElementById("roleplay-btn-create-char");
+    const roleplayBtnRefreshChars = document.getElementById("roleplay-btn-refresh-chars");
+    const roleplayCatPills = document.querySelectorAll(".roleplay-cat-pill");
+    const countCatAll = document.getElementById("count-cat-all");
+    const roleplayHubSearchInput = document.getElementById("roleplay-hub-search-input");
+    const roleplayHubSortSelect = document.getElementById("roleplay-hub-sort-select");
+    const roleplayCardsGrid = document.getElementById("roleplay-cards-grid");
+
+    // Chat Arena Controls
+    const roleplayChatBackBtn = document.getElementById("roleplay-chat-back-btn");
+    const activeCharAvatar = document.getElementById("active-char-avatar");
+    const activeCharName = document.getElementById("active-char-name");
+    const activeCharBadge = document.getElementById("active-char-badge");
+    const activeCharDesc = document.getElementById("active-char-desc");
+    const roleplayModelSelect = document.getElementById("roleplay-model-select");
+
+    const roleplayToggleParamsBtn = document.getElementById("roleplay-toggle-params-btn");
+    const roleplayParamsDrawer = document.getElementById("roleplay-params-drawer");
+    const roleplayParamTemp = document.getElementById("roleplay-param-temp");
+    const roleplayParamRep = document.getElementById("roleplay-param-rep");
+    const roleplayParamMinp = document.getElementById("roleplay-param-minp");
+    const roleplayParamReplast = document.getElementById("roleplay-param-replast");
+    const valTempDisplay = document.getElementById("val-temp-display");
+    const valRepDisplay = document.getElementById("val-rep-display");
+    const valMinpDisplay = document.getElementById("val-minp-display");
+    const valReplastDisplay = document.getElementById("val-replast-display");
+
+    const roleplayToggleBioBtn = document.getElementById("roleplay-toggle-bio-btn");
+    const roleplayBioDrawer = document.getElementById("roleplay-bio-drawer");
+    const bioPersonaText = document.getElementById("bio-persona-text");
+    const bioScenerioText = document.getElementById("bio-scenerio-text");
+    const bioInstructionText = document.getElementById("bio-instruction-text");
+
+    const roleplayResetChatBtn = document.getElementById("roleplay-reset-chat-btn");
+    const roleplayMessagesContainer = document.getElementById("roleplay-messages-container");
+    const roleplayUserInput = document.getElementById("roleplay-user-input");
+    const roleplaySendBtn = document.getElementById("roleplay-send-btn");
+
+    // Create Modal Elements
+    const roleplayCreateModal = document.getElementById("roleplay-create-modal");
+    const roleplayCloseCreateBtn = document.getElementById("roleplay-close-create-btn");
+    const roleplayCancelCreateBtn = document.getElementById("roleplay-cancel-create-btn");
+    const roleplayCreateForm = document.getElementById("roleplay-create-form");
+    const createCharTemp = document.getElementById("create-char-temp");
+    const createTempVal = document.getElementById("create-temp-val");
+    const createCharRep = document.getElementById("create-char-rep");
+    const createRepVal = document.getElementById("create-rep-val");
+
+    // Lời thoại mở đầu đặc trưng chuẩn kịch bản
+    const CHARACTER_GREETINGS = {
+        "Futaba Igarashi": "*nhìn thấy bạn bước vào văn phòng, hơi giật mình rồi vội chỉnh lại xấp tài liệu trên bàn* Senpai... Anh lại tới muộn một chút đấy nhé! Đừng bảo là tối qua lại thức khuya chơi game nữa đấy? Hôm nay chúng ta có lịch đi gặp khách hàng, chuẩn bị nhanh lên nào!",
+        "Frieren": "*ngồi thong thả bên bìa rừng, khẽ lật giở một trang sách cổ ma pháp ma thuật, đôi tai nhọn khẽ rung rinh* Lại gặp nhau rồi, người học việc của ta. Hôm nay cậu muốn ta chỉ dẫn ma pháp tấn công Zoltraak, hay chúng ta cùng đi tìm những ma pháp độc lạ bị lãng quên?",
+        "English Teacher": "*smiles warmly and writes today's topic on the whiteboard* Hello there! Welcome to our English session. I'm Oscar, your English speaking partner. How was your day so far? Tell me one interesting thing that happened today!",
+        "Edubot": "*mỉm cười thân thiện với ánh mắt sáng ngời* Chào bạn! Tôi là Edubot - gia sư AI đồng hành cùng bạn. Bất kể là toán học, khoa học, lập trình hay các khái niệm phức tạp, hãy chia sẻ chủ đề bạn muốn khám phá hôm nay nhé!",
+        "Aki Sorrel": "*bối rối ôm chặt hộp cơm bento nhỏ trong tay, mái tóc pastel khẽ lay động khi ngẩng đầu lên nhìn bạn đầy ngập ngừng* Chào... chào bạn... Chỗ này còn trống không? Mình... mình có thể ngồi cùng bạn một chút được không?...",
+        "Teacher": "*gõ nhẹ viên phấn lên bảng, mỉm cười đôn hậu và ấm áp* Chào em! Hôm nay phần lập trình, cấu trúc dữ liệu hay thuật toán có điểm nào em đang gặp khó khăn không? Cứ thoải mái trao đổi, thầy sẽ cùng em bóc tách từng bước!"
+    };
+
+    function switchToHubView() {
+        if (roleplayViewChat) roleplayViewChat.style.display = "none";
+        if (roleplayViewHub) roleplayViewHub.style.display = "flex";
+    }
+
+    function switchToChatView(char) {
+        if (!char) return;
+        if (roleplayViewHub) roleplayViewHub.style.display = "none";
+        if (roleplayViewChat) roleplayViewChat.style.display = "flex";
+        selectRoleplayCharacter(char);
+    }
+
+    async function loadRoleplayCharacters(forceRefresh = false) {
+        if (!roleplayCardsGrid) return;
+        if (forceRefresh) {
+            roleplayCardsGrid.innerHTML = `
+                <div class="roleplay-grid-loading">
+                    <div class="spinner-sm"></div>
+                    <span>Đang nạp các nhân vật từ Neon DB...</span>
+                </div>
+            `;
+        }
+
+        try {
+            const endpoint = `/api/roleplay/characters${forceRefresh ? '?refresh=true' : ''}`;
+            const res = await fetchApiWithFallback(endpoint);
+            const data = await res.json();
+
+            if (data.success && Array.isArray(data.characters)) {
+                roleplayCharacters = data.characters;
+                applyRoleplayFiltersAndSort();
+                
+                // Khôi phục nhân vật active nếu đang mở chat
+                if (activeRoleplayCharacter) {
+                    const refreshed = roleplayCharacters.find(c => c.character_name === activeRoleplayCharacter.character_name);
+                    if (refreshed) activeRoleplayCharacter = refreshed;
+                }
+            } else {
+                roleplayCardsGrid.innerHTML = `<div style="grid-column: 1/-1; padding: 40px; color: var(--danger); text-align: center;">Không thể tải nhân vật: ${escapeHtml(data.error || 'Lỗi không xác định')}</div>`;
+            }
+        } catch (e) {
+            console.warn("[Roleplay] Lỗi kết nối tải nhân vật:", e);
+            roleplayCardsGrid.innerHTML = `<div style="grid-column: 1/-1; padding: 40px; color: var(--text-muted); text-align: center;">Chưa thể kết nối tới Neon DB. Vui lòng kiểm tra lại server (${escapeHtml(e.message || 'Lỗi kết nối')}).</div>`;
+        }
+    }
+
+    function applyRoleplayFiltersAndSort() {
+        if (!roleplayCardsGrid) return;
+        let list = [...roleplayCharacters];
+
+        // Cập nhật số lượng tổng
+        if (countCatAll) countCatAll.textContent = roleplayCharacters.length;
+        if (roleplayHeroCount) roleplayHeroCount.textContent = roleplayCharacters.length;
+
+        // 1. Lọc theo Search Query
+        const query = (roleplayHubSearchInput ? roleplayHubSearchInput.value : "").toLowerCase().trim();
+        if (query) {
+            list = list.filter(c => 
+                (c.character_name && c.character_name.toLowerCase().includes(query)) ||
+                (c.content && c.content.toLowerCase().includes(query)) ||
+                (c.persona && c.persona.toLowerCase().includes(query)) ||
+                (c.scenerio && c.scenerio.toLowerCase().includes(query))
+            );
+        }
+
+        // 2. Lọc theo Danh mục (Category Pill)
+        if (currentRoleplayCategory === "education") {
+            list = list.filter(c => getCharacterCategory(c) === "education");
+        } else if (currentRoleplayCategory === "anime") {
+            list = list.filter(c => getCharacterCategory(c) === "anime");
+        } else if (currentRoleplayCategory === "trending") {
+            list.sort((a, b) => (parseFloat(b.temperature || 1.0) - parseFloat(a.temperature || 1.0)));
+        }
+
+        // 3. Sắp xếp
+        const sortBy = roleplayHubSortSelect ? roleplayHubSortSelect.value : "created";
+        if (sortBy === "name") {
+            list.sort((a, b) => (a.character_name || "").localeCompare(b.character_name || ""));
+        } else if (sortBy === "temp") {
+            list.sort((a, b) => (parseFloat(b.temperature || 1.0) - parseFloat(a.temperature || 1.0)));
+        }
+
+        renderRoleplayCards(list);
+    }
+
+    function renderRoleplayCards(characters) {
+        if (!roleplayCardsGrid) return;
+        if (!characters || characters.length === 0) {
+            roleplayCardsGrid.innerHTML = `
+                <div style="grid-column: 1/-1; padding: 60px 20px; text-align: center; color: var(--text-muted, #64748b);">
+                    <div style="font-size: 2.6rem; margin-bottom: 12px;">🔍</div>
+                    <h3 style="color: var(--text-primary, #0f172a); margin-bottom: 6px; font-weight: 700;">Không tìm thấy nhân vật phù hợp</h3>
+                    <p style="font-size: 0.88rem; max-width: 460px; margin: 0 auto;">Hãy thử tìm kiếm với từ khóa khác, chọn danh mục "Tất Cả" hoặc nhấn "Tạo Nhân Vật Mới" để thêm vào hệ thống.</p>
+                </div>
+            `;
+            return;
+        }
+
+        roleplayCardsGrid.innerHTML = "";
+        characters.forEach(c => {
+            const card = document.createElement("div");
+            card.className = "roleplay-char-card";
+            card.setAttribute("data-name", c.character_name);
+
+            const imgSrc = getCharacterImage(c);
+            const tagline = (c.content && c.content !== "1") ? c.content : (c.scenerio ? c.scenerio.substring(0, 95) + "..." : "Nhân vật AI đồng hành cùng bạn.");
+            const tempVal = c.temperature || 1.0;
+            const author = c.creator || "system";
+            const cat = getCharacterCategory(c);
+            const catBadgeText = cat === "education" ? "🎓 Giáo Dục" : (cat === "anime" ? "🌸 Anime" : "🎭 Nhập Vai");
+
+            card.innerHTML = `
+                <div class="roleplay-card-cover">
+                    <img class="roleplay-card-img" src="${imgSrc}" alt="${escapeHtml(c.character_name)}" referrerpolicy="no-referrer" onerror="this.src='${getFallbackAvatar(c.character_name)}'">
+                    <div class="roleplay-card-overlay-badge" title="Danh mục nhân vật">
+                        <span class="badge-dot-live"></span>
+                        <span>${catBadgeText}</span>
+                    </div>
+                    <div class="roleplay-card-temp-badge" title="Nhiệt độ sáng tạo (Temperature)">
+                        <span>⚡ T: ${tempVal}</span>
+                    </div>
+                </div>
+                <div class="roleplay-card-body">
+                    <div class="roleplay-card-title-row">
+                        <h4 class="roleplay-card-title" title="${escapeHtml(c.character_name)}">${escapeHtml(c.character_name)}</h4>
+                    </div>
+                    <div class="roleplay-card-author">
+                        <span>by</span>
+                        <span class="author-name">@${escapeHtml(author)}</span>
+                    </div>
+                    <p class="roleplay-card-tagline" title="${escapeHtml(tagline)}">${escapeHtml(tagline)}</p>
+                </div>
+                <div class="roleplay-card-footer">
+                    <div class="roleplay-card-chat-hint" title="Sẵn sàng đàm thoại trực tiếp">
+                        <span>💬 Sẵn sàng</span>
+                    </div>
+                    <div class="roleplay-card-actions">
+                        <button type="button" class="roleplay-card-btn-action" title="Bắt đầu trò chuyện với ${escapeHtml(c.character_name)}">
+                            <span>Trò chuyện</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </button>
+                        <button type="button" class="roleplay-card-btn-del" title="Xóa nhân vật khỏi Neon DB">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Bấm vào thẻ để mở Chat Arena
+            card.addEventListener("click", (e) => {
+                // Nếu bấm nút xóa
+                if (e.target.closest(".roleplay-card-btn-del")) {
+                    e.stopPropagation();
+                    if (confirm(`Bạn có chắc chắn muốn xóa nhân vật "${c.character_name}" khỏi Neon DB?`)) {
+                        deleteRoleplayCharacter(c.character_name);
+                    }
+                    return;
+                }
+                switchToChatView(c);
+            });
+
+            roleplayCardsGrid.appendChild(card);
+        });
+    }
+
+    async function deleteRoleplayCharacter(charName) {
+        try {
+            const endpoint = `/api/roleplay/characters/${encodeURIComponent(charName)}`;
+            const res = await fetchApiWithFallback(endpoint, {
+                method: "DELETE"
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`Đã xóa thành công nhân vật "${charName}".`);
+                localStorage.removeItem(getRoleplayHistoryKey(charName));
+                loadRoleplayCharacters(true);
+            } else {
+                alert(`Không thể xóa nhân vật: ${data.error || 'Lỗi server'}`);
+            }
+        } catch (e) {
+            console.error("[Roleplay] Lỗi khi xóa nhân vật:", e);
+            alert(`Lỗi kết nối khi xóa nhân vật: ${e.message || 'Lỗi kết nối'}`);
+        }
+    }
+
+    function selectRoleplayCharacter(char) {
+        if (!char) return;
+        activeRoleplayCharacter = char;
+        localStorage.setItem("HPU2_LAST_ROLEPLAY_CHAR", char.character_name);
+
+        // Cập nhật Header Arena
+        if (activeCharAvatar) {
+            activeCharAvatar.src = getCharacterImage(char);
+            activeCharAvatar.onerror = () => { activeCharAvatar.src = getFallbackAvatar(char.character_name); };
+        }
+        if (activeCharName) activeCharName.textContent = char.character_name;
+        if (activeCharBadge) {
+            const cat = getCharacterCategory(char);
+            activeCharBadge.textContent = cat === "education" ? "🎓 Giáo Dục" : (cat === "anime" ? "🌸 Anime" : "🎭 Nhập Vai");
+        }
+        if (activeCharDesc) activeCharDesc.textContent = char.scenerio ? char.scenerio.substring(0, 95) + "..." : "Sẵn sàng tương tác đàm thoại";
+
+        // Cập nhật giá trị thông số trong Parameters Drawer
+        const temp = char.temperature || 1.0;
+        const rep = char.repeat_penalty || 1.1;
+        const minp = char.min_p || 0.1;
+        const replast = char.repeat_last_n || 128;
+
+        if (roleplayParamTemp) roleplayParamTemp.value = temp;
+        if (valTempDisplay) valTempDisplay.textContent = temp;
+
+        if (roleplayParamRep) roleplayParamRep.value = rep;
+        if (valRepDisplay) valRepDisplay.textContent = rep;
+
+        if (roleplayParamMinp) roleplayParamMinp.value = minp;
+        if (valMinpDisplay) valMinpDisplay.textContent = minp;
+
+        if (roleplayParamReplast) roleplayParamReplast.value = replast;
+        if (valReplastDisplay) valReplastDisplay.textContent = replast;
+
+        // Cập nhật thông tin trong Bio Drawer
+        if (bioPersonaText) bioPersonaText.textContent = char.persona || "Chưa có thông tin tính cách chi tiết.";
+        if (bioScenerioText) bioScenerioText.textContent = char.scenerio || "Chưa có kịch bản cụ thể.";
+        if (bioInstructionText) bioInstructionText.textContent = char.character_instruction || "Nhập vai tự nhiên.";
+
+        // Khởi tạo phiên session ID
+        activeRoleplaySessionId = `roleplay_${char.character_name.replace(/\s+/g, '_')}_${Date.now()}`;
+
+        // Nạp lịch sử tin nhắn
+        renderRoleplayHistory(char);
+    }
+
+    function getRoleplayHistoryKey(charName) {
+        return `HPU2_ROLEPLAY_HISTORY_${charName}`;
+    }
+
+    function getStoredRoleplayMessages(charName) {
+        try {
+            const raw = localStorage.getItem(getRoleplayHistoryKey(charName));
+            if (raw) return JSON.parse(raw);
+        } catch (e) {}
+        return null;
+    }
+
+    function saveStoredRoleplayMessages(charName, messages) {
+        try {
+            localStorage.setItem(getRoleplayHistoryKey(charName), JSON.stringify(messages));
+        } catch (e) {}
+    }
+
+    function renderRoleplayHistory(char) {
+        if (!roleplayMessagesContainer) return;
+        roleplayMessagesContainer.innerHTML = "";
+
+        let messages = getStoredRoleplayMessages(char.character_name);
+        if (!messages || messages.length === 0) {
+            // Khởi tạo lời chào mở đầu chuẩn kịch bản nhân vật
+            const initialGreeting = CHARACTER_GREETINGS[char.character_name] || 
+                `*mỉm cười nhìn bạn và gật đầu nhẹ* Chào bạn! Mình là ${char.character_name}. Rất vui được gặp bạn hôm nay, chúng ta cùng trò chuyện nhé!`;
+            
+            messages = [
+                {
+                    role: "assistant",
+                    content: initialGreeting,
+                    timestamp: Date.now()
+                }
+            ];
+            saveStoredRoleplayMessages(char.character_name, messages);
+        }
+
+        messages.forEach(msg => {
+            appendRoleplayMessageDOM(msg.role, msg.content, char);
+        });
+
+        scrollRoleplayFeedToBottom();
+    }
+
+    function appendRoleplayMessageDOM(role, content, char) {
+        if (!roleplayMessagesContainer) return;
+        const row = document.createElement("div");
+        row.className = `roleplay-msg-row ${role}`;
+
+        if (role === "assistant") {
+            const avatarSrc = getCharacterImage(char);
+            const avatarEl = document.createElement("img");
+            avatarEl.className = "roleplay-msg-avatar";
+            avatarEl.src = avatarSrc;
+            avatarEl.onerror = () => { avatarEl.src = getFallbackAvatar(char ? char.character_name : "AI"); };
+            row.appendChild(avatarEl);
+
+            const bubble = document.createElement("div");
+            bubble.className = "roleplay-char-bubble";
+            renderRichContent(content, bubble);
+            row.appendChild(bubble);
+        } else {
+            const bubble = document.createElement("div");
+            bubble.className = "roleplay-user-bubble";
+            bubble.innerHTML = `<p>${escapeHtml(content)}</p>`;
+            row.appendChild(bubble);
+        }
+
+        roleplayMessagesContainer.appendChild(row);
+    }
+
+    function scrollRoleplayFeedToBottom() {
+        if (roleplayMessagesContainer) {
+            roleplayMessagesContainer.scrollTop = roleplayMessagesContainer.scrollHeight;
+        }
+    }
+
+    async function sendRoleplayMessage() {
+        if (!activeRoleplayCharacter || isRoleplayGenerating) return;
+        const text = (roleplayUserInput.value || "").trim();
+        if (!text) return;
+
+        roleplayUserInput.value = "";
+        roleplayUserInput.style.height = "auto";
+
+        // 1. Thêm tin nhắn của User
+        appendRoleplayMessageDOM("user", text, activeRoleplayCharacter);
+        scrollRoleplayFeedToBottom();
+
+        // Cập nhật lịch sử cục bộ
+        let history = getStoredRoleplayMessages(activeRoleplayCharacter.character_name) || [];
+        history.push({ role: "user", content: text, timestamp: Date.now() });
+        saveStoredRoleplayMessages(activeRoleplayCharacter.character_name, history);
+
+        // 2. Tạo placeholder bong bóng của Assistant kèm typing indicator
+        const char = activeRoleplayCharacter;
+        const row = document.createElement("div");
+        row.className = "roleplay-msg-row assistant";
+        row.id = "active-roleplay-row";
+
+        const avatarSrc = getCharacterImage(char);
+        const avatarEl = document.createElement("img");
+        avatarEl.className = "roleplay-msg-avatar";
+        avatarEl.src = avatarSrc;
+        avatarEl.onerror = () => { avatarEl.src = getFallbackAvatar(char.character_name); };
+        row.appendChild(avatarEl);
+
+        const bubble = document.createElement("div");
+        bubble.className = "roleplay-char-bubble";
+        bubble.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 0.88rem;">
+                <div class="spinner-sm"></div>
+                <span>*${escapeHtml(char.character_name)} đang suy nghĩ và chuẩn bị lời thoại...*</span>
+            </div>
+        `;
+        row.appendChild(bubble);
+        roleplayMessagesContainer.appendChild(row);
+        scrollRoleplayFeedToBottom();
+
+        // 3. Khóa trạng thái input
+        isRoleplayGenerating = true;
+        if (roleplaySendBtn) roleplaySendBtn.disabled = true;
+
+        // Chuẩn bị payload
+        const historySlice = history.slice(-10).map(m => ({ role: m.role, content: m.content }));
+        if (historySlice.length > 0 && historySlice[historySlice.length - 1].role === "user") {
+            historySlice.pop();
+        }
+
+        const modelId = roleplayModelSelect ? roleplayModelSelect.value : "qwen2.5:14b";
+        const customOptions = {
+            temperature: parseFloat(roleplayParamTemp ? roleplayParamTemp.value : 1.0),
+            repeat_penalty: parseFloat(roleplayParamRep ? roleplayParamRep.value : 1.1),
+            min_p: parseFloat(roleplayParamMinp ? roleplayParamMinp.value : 0.1),
+            repeat_last_n: parseInt(roleplayParamReplast ? roleplayParamReplast.value : 128)
+        };
+
+        const username = (currentUser && currentUser.username) ? currentUser.username : "user";
+
+        const payload = {
+            character_name: char.character_name,
+            message: text,
+            history: historySlice,
+            model: modelId,
+            custom_options: customOptions,
+            session_id: activeRoleplaySessionId,
+            username: username
+        };
+
+        let aiReplyText = "";
+        let hasStartedStreaming = false;
+
+        try {
+            const base = getRoleplayApiBase();
+            const response = await fetch(`${base}/api/roleplay/chat`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-User-Name": username,
+                    "X-User-Role": currentUser?.role || "user"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errJson = await response.json().catch(() => ({}));
+                throw new Error(errJson.error || `Lỗi HTTP ${response.status}`);
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            let buffer = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split("\n\n");
+                buffer = lines.pop();
+
+                for (const line of lines) {
+                    if (line.startsWith("data: ")) {
+                        const rawData = line.substring(6).trim();
+                        if (!rawData) continue;
+                        try {
+                            const parsed = JSON.parse(rawData);
+                            if (parsed.type === "token") {
+                                if (!hasStartedStreaming) {
+                                    hasStartedStreaming = true;
+                                    bubble.innerHTML = "";
+                                }
+                                aiReplyText += parsed.content;
+                                renderRichContent(aiReplyText, bubble);
+                                scrollRoleplayFeedToBottom();
+                            } else if (parsed.type === "done") {
+                                // Hoàn thành sinh token
+                            }
+                        } catch (parseErr) {
+                            console.warn("[Roleplay SSE Parse Error]", parseErr, rawData);
+                        }
+                    }
+                }
+            }
+
+            if (!aiReplyText) {
+                aiReplyText = "*mỉm cười im lặng nhìn bạn*";
+                renderRichContent(aiReplyText, bubble);
+            }
+
+            // Lưu phản hồi Assistant vào LocalStorage
+            history.push({ role: "assistant", content: aiReplyText, timestamp: Date.now() });
+            saveStoredRoleplayMessages(char.character_name, history);
+
+        } catch (fetchErr) {
+            console.error("[Roleplay Chat Error]", fetchErr);
+            bubble.innerHTML = `<span style="color: var(--danger);">[Lỗi đàm thoại: ${escapeHtml(fetchErr.message || 'Không thể kết nối máy chủ')}]</span>`;
+        } finally {
+            isRoleplayGenerating = false;
+            row.removeAttribute("id");
+            if (roleplaySendBtn) roleplaySendBtn.disabled = false;
+            if (roleplayUserInput) roleplayUserInput.focus();
+        }
+    }
+
+    function initRoleplay() {
+        // Tải danh sách nhân vật
+        loadRoleplayCharacters();
+
+        // Category pills click handler
+        if (roleplayCatPills) {
+            roleplayCatPills.forEach(pill => {
+                pill.addEventListener("click", () => {
+                    roleplayCatPills.forEach(p => p.classList.remove("active"));
+                    pill.classList.add("active");
+                    currentRoleplayCategory = pill.getAttribute("data-category") || "all";
+                    applyRoleplayFiltersAndSort();
+                });
+            });
+        }
+
+        // Hub Search Input
+        if (roleplayHubSearchInput) {
+            roleplayHubSearchInput.addEventListener("input", () => {
+                applyRoleplayFiltersAndSort();
+            });
+        }
+
+        // Hub Sort Select
+        if (roleplayHubSortSelect) {
+            roleplayHubSortSelect.addEventListener("change", () => {
+                applyRoleplayFiltersAndSort();
+            });
+        }
+
+        // Refresh Button
+        if (roleplayBtnRefreshChars) {
+            roleplayBtnRefreshChars.addEventListener("click", () => {
+                loadRoleplayCharacters(true);
+            });
+        }
+
+        // Create Button
+        if (roleplayBtnCreateChar) {
+            roleplayBtnCreateChar.addEventListener("click", () => {
+                if (roleplayCreateModal) roleplayCreateModal.style.display = "flex";
+            });
+        }
+
+        // Arena Back Button
+        if (roleplayChatBackBtn) {
+            roleplayChatBackBtn.addEventListener("click", () => {
+                switchToHubView();
+            });
+        }
+
+        // Create Modal Events
+        if (roleplayCloseCreateBtn) {
+            roleplayCloseCreateBtn.addEventListener("click", () => {
+                if (roleplayCreateModal) roleplayCreateModal.style.display = "none";
+            });
+        }
+        if (roleplayCancelCreateBtn) {
+            roleplayCancelCreateBtn.addEventListener("click", () => {
+                if (roleplayCreateModal) roleplayCreateModal.style.display = "none";
+            });
+        }
+        if (roleplayCreateModal) {
+            roleplayCreateModal.addEventListener("click", (e) => {
+                if (e.target === roleplayCreateModal) {
+                    roleplayCreateModal.style.display = "none";
+                }
+            });
+        }
+
+        if (createCharTemp && createTempVal) {
+            createCharTemp.addEventListener("input", (e) => {
+                createTempVal.textContent = e.target.value;
+            });
+        }
+        if (createCharRep && createRepVal) {
+            createCharRep.addEventListener("input", (e) => {
+                createRepVal.textContent = e.target.value;
+            });
+        }
+
+        if (roleplayCreateForm) {
+            roleplayCreateForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const nameInput = document.getElementById("create-char-name");
+                const contentInput = document.getElementById("create-char-content");
+                const imageInput = document.getElementById("create-char-image");
+                const personaInput = document.getElementById("create-char-persona");
+                const scenarioInput = document.getElementById("create-char-scenario");
+                const instructionInput = document.getElementById("create-char-instruction");
+
+                const name = nameInput ? nameInput.value.trim() : "";
+                const content = contentInput ? contentInput.value.trim() : "";
+                const image = imageInput ? imageInput.value.trim() : "";
+                const persona = personaInput ? personaInput.value.trim() : "";
+                const scenario = scenarioInput ? scenarioInput.value.trim() : "";
+                const instruction = instructionInput ? instructionInput.value.trim() : "";
+                const temp = parseFloat(createCharTemp ? createCharTemp.value : 1.0);
+                const rep = parseFloat(createCharRep ? createCharRep.value : 1.1);
+
+                if (!name || !content || !persona) {
+                    alert("Vui lòng điền đầy đủ các mục bắt buộc (*)");
+                    return;
+                }
+
+                const payload = {
+                    character_name: name,
+                    content: content,
+                    linkanh: image || getFallbackAvatar(name),
+                    persona: persona,
+                    scenerio: scenario || "Cuộc trò chuyện giữa người dùng và nhân vật.",
+                    character_instruction: instruction || "Text transcript of a conversation. Gestures written between asterisks.",
+                    temperature: temp || 1.0,
+                    repeat_penalty: rep || 1.1,
+                    min_p: 0.1,
+                    repeat_last_n: 128
+                };
+
+                const submitBtn = document.getElementById("roleplay-submit-create-btn");
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = "Đang lưu Neon DB...";
+                }
+
+                try {
+                    const res = await fetchApiWithFallback("/api/roleplay/characters", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        alert(`Nhân vật "${name}" đã được lưu thành công vào Neon DB!`);
+                        roleplayCreateForm.reset();
+                        if (roleplayCreateModal) roleplayCreateModal.style.display = "none";
+                        await loadRoleplayCharacters(true);
+                        switchToChatView(payload);
+                    } else {
+                        alert(`Lỗi khi tạo nhân vật: ${data.error || 'Lỗi server'}`);
+                    }
+                } catch (err) {
+                    console.error("[Roleplay] Lỗi tạo nhân vật:", err);
+                    alert(`Không thể kết nối đến server để tạo nhân vật: ${err.message || 'Lỗi kết nối'}`);
+                } finally {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = "Lưu Vào Neon DB";
+                    }
+                }
+            });
+        }
+
+        // Drawers toggle
+        if (roleplayToggleParamsBtn && roleplayParamsDrawer) {
+            roleplayToggleParamsBtn.addEventListener("click", () => {
+                const isHidden = roleplayParamsDrawer.style.display === "none";
+                roleplayParamsDrawer.style.display = isHidden ? "block" : "none";
+                roleplayToggleParamsBtn.classList.toggle("active", isHidden);
+            });
+        }
+
+        if (roleplayToggleBioBtn && roleplayBioDrawer) {
+            roleplayToggleBioBtn.addEventListener("click", () => {
+                const isHidden = roleplayBioDrawer.style.display === "none";
+                roleplayBioDrawer.style.display = isHidden ? "block" : "none";
+                roleplayToggleBioBtn.classList.toggle("active", isHidden);
+            });
+        }
+
+        // Sliders live values update
+        if (roleplayParamTemp && valTempDisplay) {
+            roleplayParamTemp.addEventListener("input", (e) => {
+                valTempDisplay.textContent = e.target.value;
+            });
+        }
+        if (roleplayParamRep && valRepDisplay) {
+            roleplayParamRep.addEventListener("input", (e) => {
+                valRepDisplay.textContent = e.target.value;
+            });
+        }
+        if (roleplayParamMinp && valMinpDisplay) {
+            roleplayParamMinp.addEventListener("input", (e) => {
+                valMinpDisplay.textContent = e.target.value;
+            });
+        }
+        if (roleplayParamReplast && valReplastDisplay) {
+            roleplayParamReplast.addEventListener("input", (e) => {
+                valReplastDisplay.textContent = e.target.value;
+            });
+        }
+
+        // Reset chat
+        if (roleplayResetChatBtn) {
+            roleplayResetChatBtn.addEventListener("click", () => {
+                if (!activeRoleplayCharacter) return;
+                if (confirm(`Bạn có chắc chắn muốn làm mới cuộc trò chuyện với ${activeRoleplayCharacter.character_name}?`)) {
+                    localStorage.removeItem(getRoleplayHistoryKey(activeRoleplayCharacter.character_name));
+                    renderRoleplayHistory(activeRoleplayCharacter);
+                }
+            });
+        }
+
+        // Input send handlers
+        if (roleplaySendBtn) {
+            roleplaySendBtn.addEventListener("click", () => {
+                sendRoleplayMessage();
+            });
+        }
+
+        if (roleplayUserInput) {
+            roleplayUserInput.addEventListener("input", () => {
+                roleplayUserInput.style.height = "auto";
+                roleplayUserInput.style.height = Math.min(roleplayUserInput.scrollHeight, 140) + "px";
+            });
+            roleplayUserInput.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendRoleplayMessage();
+                }
+            });
+        }
+    }
+
+    // ---------------------- MODEL SELECTORS GLOBAL SYNC ----------------------
+    function updateAllModelSelectors(models, defaultModel = "qwen2.5:14b") {
+        if (!models || !Array.isArray(models)) return;
+
+        // 1. Direct Chat & RAG Chat dock dropdowns
+        [selectModelDirect, selectModelRag].forEach(sel => {
+            if (!sel) return;
+            const currentVal = sel.value;
+            sel.innerHTML = "";
+            models.forEach(m => {
+                const opt = document.createElement("option");
+                opt.value = m.id;
+                opt.textContent = m.name;
+                if (m.default || m.id === defaultModel) opt.selected = true;
+                sel.appendChild(opt);
+            });
+            if (models.some(m => m.id === currentVal)) {
+                sel.value = currentVal;
+            }
+        });
+
+        // 2. OCR model select
+        const ocrModelSelect = document.getElementById("ocr-model-select");
+        if (ocrModelSelect) {
+            const currentVal = ocrModelSelect.value;
+            ocrModelSelect.innerHTML = "";
+            models.forEach(m => {
+                const opt = document.createElement("option");
+                opt.value = m.id;
+                opt.textContent = m.name;
+                if (m.default || m.id === defaultModel) opt.selected = true;
+                ocrModelSelect.appendChild(opt);
+            });
+            if (models.some(m => m.id === currentVal)) {
+                ocrModelSelect.value = currentVal;
+            }
+        }
+
+        // 3. Roleplay model select
+        const roleplayModelSelect = document.getElementById("roleplay-model-select");
+        if (roleplayModelSelect) {
+            const currentVal = roleplayModelSelect.value;
+            roleplayModelSelect.innerHTML = "";
+            models.forEach(m => {
+                const opt = document.createElement("option");
+                opt.value = m.id;
+                opt.textContent = m.name;
+                if (m.default || m.id === defaultModel) opt.selected = true;
+                roleplayModelSelect.appendChild(opt);
+            });
+            if (models.some(m => m.id === currentVal)) {
+                roleplayModelSelect.value = currentVal;
+            }
+        }
+    }
+
+    // ---------------------- ADMIN MODEL MANAGEMENT (NEON DB) ----------------------
+    let adminModelsInitialized = false;
+    let allAdminModels = [];
+    let detectedOllamaModels = [];
+
+    function checkIsAdminUser() {
+        return Boolean(currentUser && (currentUser.role === "admin" || (currentUser.username && currentUser.username.toLowerCase() === "admin")));
+    }
+
+    async function initAdminModels() {
+        const isAdmin = checkIsAdminUser();
+        const authNotice = document.getElementById("admin-auth-notice");
+        if (authNotice) {
+            authNotice.style.display = isAdmin ? "none" : "flex";
+        }
+
+        const quickLoginBtn = document.getElementById("admin-quick-login-btn");
+        if (quickLoginBtn && !quickLoginBtn.dataset.bound) {
+            quickLoginBtn.dataset.bound = "1";
+            quickLoginBtn.addEventListener("click", async () => {
+                try {
+                    quickLoginBtn.disabled = true;
+                    quickLoginBtn.innerHTML = "<span>⏳ Đang đăng nhập Admin...</span>";
+                    const apiBase = CONFIG.getApiBase();
+                    const res = await fetch(`${apiBase}/api/auth/login`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ username: "admin", password: "1234567" })
+                    });
+                    const data = await res.json();
+                    if (data.success && data.user) {
+                        setCurrentUser(data.user);
+                        if (authNotice) authNotice.style.display = "none";
+                        await loadAdminModelsData();
+                        await scanOllamaHost();
+                        alert("Đã đăng nhập tài khoản Quản trị viên (Admin) thành công!");
+                    } else {
+                        alert("Đăng nhập Admin thất bại: " + (data.error || "Không rõ nguyên nhân"));
+                    }
+                } catch (err) {
+                    console.error("[AdminLogin] Lỗi:", err);
+                    alert("Lỗi kết nối khi đăng nhập: " + err.message);
+                } finally {
+                    quickLoginBtn.disabled = false;
+                    quickLoginBtn.innerHTML = "<span>🔑 Đăng Nhập Nhanh Admin</span>";
+                }
+            });
+        }
+
+        const btnOpenAdd = document.getElementById("admin-btn-open-add-model");
+        const btnScanOllama = document.getElementById("admin-btn-scan-ollama");
+        const btnRefresh = document.getElementById("admin-btn-refresh-models");
+        const btnQuickSync = document.getElementById("admin-btn-quick-sync");
+        const searchInput = document.getElementById("admin-search-models");
+
+        const addModal = document.getElementById("admin-add-model-modal");
+        const closeModalBtn = document.getElementById("admin-close-model-modal-btn");
+        const cancelModalBtn = document.getElementById("admin-cancel-model-modal-btn");
+        const addForm = document.getElementById("admin-add-model-form");
+
+        if (!adminModelsInitialized) {
+            adminModelsInitialized = true;
+
+            if (btnOpenAdd) {
+                btnOpenAdd.addEventListener("click", () => {
+                    if (!checkIsAdminUser()) {
+                        alert("Vui lòng đăng nhập tài khoản Quản trị viên (Admin) để thêm mô hình mới vào hệ thống.");
+                        return;
+                    }
+                    openAddModelModal();
+                });
+            }
+
+            if (closeModalBtn) {
+                closeModalBtn.addEventListener("click", () => {
+                    if (addModal) addModal.style.display = "none";
+                });
+            }
+
+            if (cancelModalBtn) {
+                cancelModalBtn.addEventListener("click", () => {
+                    if (addModal) addModal.style.display = "none";
+                });
+            }
+
+            if (addModal) {
+                addModal.addEventListener("click", (e) => {
+                    if (e.target === addModal) addModal.style.display = "none";
+                });
+            }
+
+            if (btnScanOllama) {
+                btnScanOllama.addEventListener("click", () => {
+                    scanOllamaHost();
+                });
+            }
+
+            if (btnQuickSync) {
+                btnQuickSync.addEventListener("click", () => {
+                    scanOllamaHost();
+                });
+            }
+
+            if (btnRefresh) {
+                btnRefresh.addEventListener("click", () => {
+                    loadAdminModelsData();
+                });
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener("input", (e) => {
+                    renderAdminModelsList(e.target.value);
+                });
+            }
+
+            if (addForm) {
+                addForm.addEventListener("submit", async (e) => {
+                    e.preventDefault();
+                    if (!checkIsAdminUser()) {
+                        alert("Vui lòng đăng nhập tài khoản Quản trị viên (Admin) để lưu mô hình.");
+                        return;
+                    }
+                    await handleSaveModelSubmit();
+                });
+            }
+        }
+
+        // Tải danh sách mô hình từ Neon DB & Quét máy chủ Ollama
+        await loadAdminModelsData();
+        await scanOllamaHost();
+    }
+
+    function openAddModelModal(prefillId = "", prefillName = "", isMultimodal = false) {
+        const addModal = document.getElementById("admin-add-model-modal");
+        const idInput = document.getElementById("admin-input-model-id");
+        const nameInput = document.getElementById("admin-input-model-name");
+        const mmChk = document.getElementById("admin-chk-multimodal");
+        const defChk = document.getElementById("admin-chk-default");
+        const descInput = document.getElementById("admin-input-model-desc");
+        const modalTitle = document.getElementById("admin-model-modal-title");
+
+        if (modalTitle) modalTitle.textContent = prefillId ? "Thêm Mô Hình Từ Ollama Vào Hệ Thống" : "Thêm Mô Hình LLM Mới Vào Hệ Thống";
+        if (idInput) idInput.value = prefillId;
+        if (nameInput) nameInput.value = prefillName || (prefillId ? `${prefillId.toUpperCase()} (Ollama)` : "");
+        if (mmChk) mmChk.checked = isMultimodal;
+        if (defChk) defChk.checked = false;
+        if (descInput) descInput.value = "";
+
+        if (addModal) addModal.style.display = "flex";
+        if (nameInput && prefillId) nameInput.focus();
+        else if (idInput) idInput.focus();
+    }
+
+    async function loadAdminModelsData() {
+        const listContainer = document.getElementById("admin-models-list-container");
+        if (listContainer) {
+            listContainer.innerHTML = `<div class="admin-loading-placeholder">Đang tải danh sách mô hình từ Neon DB...</div>`;
+        }
+
+        try {
+            const apiBase = CONFIG.getApiBase();
+            const isAdmin = checkIsAdminUser();
+            const url = isAdmin
+                ? `${apiBase}/api/admin/models?username=${encodeURIComponent((currentUser && currentUser.username) || '')}&role=${encodeURIComponent((currentUser && currentUser.role) || '')}`
+                : `${apiBase}/api/models`;
+            const headers = isAdmin
+                ? {
+                    "X-User-Name": (currentUser && currentUser.username) || "",
+                    "X-User-Role": (currentUser && currentUser.role) || ""
+                  }
+                : {};
+
+            const res = await fetch(url, { headers });
+            const data = await res.json();
+            const modelsList = data.models || [];
+            if (Array.isArray(modelsList)) {
+                allAdminModels = modelsList;
+
+                // Cập nhật thống kê
+                const statTotal = document.getElementById("admin-stat-total-models");
+                const statDefault = document.getElementById("admin-stat-default-model");
+                const statMm = document.getElementById("admin-stat-multimodal-count");
+                const countBadge = document.getElementById("admin-active-count-badge");
+
+                if (statTotal) statTotal.textContent = allAdminModels.length;
+                if (statDefault) {
+                    const defModel = allAdminModels.find(m => m.default) || allAdminModels[0];
+                    statDefault.textContent = defModel ? defModel.id : "Chưa chọn";
+                    statDefault.title = defModel ? defModel.name : "";
+                }
+                if (statMm) statMm.textContent = allAdminModels.filter(m => m.multimodal).length;
+                if (countBadge) countBadge.textContent = `${allAdminModels.length} mô hình`;
+
+                renderAdminModelsList();
+                if (typeof updateAllModelSelectors === "function") {
+                    updateAllModelSelectors(allAdminModels, data.default_model);
+                }
+            } else {
+                if (listContainer) {
+                    listContainer.innerHTML = `<div class="admin-loading-placeholder" style="color:#ef4444;">Lỗi tải dữ liệu: ${data.error || 'Không xác định'}</div>`;
+                }
+            }
+        } catch (err) {
+            console.error("[AdminModels] Lỗi khi tải models:", err);
+            if (listContainer) {
+                listContainer.innerHTML = `<div class="admin-loading-placeholder" style="color:#ef4444;">Không thể kết nối đến server: ${err.message}</div>`;
+            }
+        }
+    }
+
+    function renderAdminModelsList(filterQuery = "") {
+        const listContainer = document.getElementById("admin-models-list-container");
+        if (!listContainer) return;
+
+        const q = filterQuery.toLowerCase().trim();
+        const filtered = allAdminModels.filter(m => 
+            (m.name && m.name.toLowerCase().includes(q)) ||
+            (m.id && m.id.toLowerCase().includes(q)) ||
+            (m.description && m.description.toLowerCase().includes(q))
+        );
+
+        if (filtered.length === 0) {
+            listContainer.innerHTML = `
+                <div class="admin-loading-placeholder">
+                    <p style="margin-bottom: 8px;">Không tìm thấy mô hình nào phù hợp.</p>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('admin-btn-open-add-model').click()">+ Thêm Mô Hình Mới</button>
+                </div>
+            `;
+            return;
+        }
+
+        listContainer.innerHTML = "";
+        filtered.forEach(m => {
+            const card = document.createElement("div");
+            card.className = `admin-model-item-card ${m.default ? "is-default" : ""}`;
+
+            const isMultimodal = m.multimodal;
+            const isDefault = m.default;
+
+            card.innerHTML = `
+                <div class="model-item-left">
+                    <div class="model-chip-icon">
+                        ${isMultimodal ? "👁️" : "🤖"}
+                    </div>
+                    <div class="model-info-wrap">
+                        <div class="model-name-row">
+                            <span class="model-item-title">${escapeHtml(m.name)}</span>
+                            <span class="model-tag-id">${escapeHtml(m.id)}</span>
+                            ${isDefault ? '<span class="badge-default">⭐ MẶC ĐỊNH</span>' : ''}
+                            ${isMultimodal ? '<span class="badge-vision">👁️ VISION</span>' : ''}
+                        </div>
+                        <p class="model-desc-text" title="${escapeHtml(m.description || 'Không có mô tả')}">
+                            ${escapeHtml(m.description || 'Mô hình chuẩn hệ thống')}
+                        </p>
+                    </div>
+                </div>
+                <div class="model-item-actions">
+                    ${!isDefault ? `
+                        <button type="button" class="btn btn-outline btn-xs btn-set-default" data-id="${escapeHtml(m.id)}" data-name="${escapeHtml(m.name)}" title="Đặt làm mô hình mặc định trên toàn hệ thống">
+                            ⭐ Mặc định
+                        </button>
+                    ` : ''}
+                    <button type="button" class="btn btn-outline btn-xs btn-del-model" style="color: #ef4444; border-color: #fca5a5;" data-id="${escapeHtml(m.id)}" data-name="${escapeHtml(m.name)}" title="Xóa mô hình khỏi hệ thống">
+                        🗑️ Xóa
+                    </button>
+                </div>
+            `;
+
+            // Bind action buttons
+            const setDefBtn = card.querySelector(".btn-set-default");
+            if (setDefBtn) {
+                setDefBtn.addEventListener("click", () => {
+                    if (!checkIsAdminUser()) {
+                        alert("Vui lòng đăng nhập tài khoản Quản trị viên (Admin) để đổi mô hình mặc định.");
+                        return;
+                    }
+                    handleSetDefaultModel(m.id, m.name);
+                });
+            }
+
+            const delBtn = card.querySelector(".btn-del-model");
+            if (delBtn) {
+                delBtn.addEventListener("click", () => {
+                    if (!checkIsAdminUser()) {
+                        alert("Vui lòng đăng nhập tài khoản Quản trị viên (Admin) để xóa mô hình.");
+                        return;
+                    }
+                    handleDeleteModel(m.id, m.name);
+                });
+            }
+
+            listContainer.appendChild(card);
+        });
+    }
+
+    async function scanOllamaHost() {
+        const ollamaContainer = document.getElementById("admin-ollama-list-container");
+        const statStatus = document.getElementById("admin-stat-ollama-status");
+        const statUrl = document.getElementById("admin-stat-ollama-url");
+        const countBadge = document.getElementById("admin-ollama-count-badge");
+
+        if (!checkIsAdminUser()) {
+            if (ollamaContainer) {
+                ollamaContainer.innerHTML = `
+                    <div class="admin-loading-placeholder" style="padding: 24px 16px;">
+                        <p style="margin-bottom: 10px; font-weight: 500;">🔒 Quét máy chủ Ollama trực tiếp yêu cầu quyền Quản trị viên.</p>
+                        <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('admin-quick-login-btn') && document.getElementById('admin-quick-login-btn').click()">
+                            🔑 Đăng Nhập Nhanh Admin
+                        </button>
+                    </div>`;
+            }
+            if (statStatus) statStatus.innerHTML = `<span style="color:#f59e0b;">🔒 Cần Quyền Admin</span>`;
+            if (statUrl) statUrl.textContent = "Yêu cầu quyền Admin";
+            if (countBadge) countBadge.textContent = "Cần Admin";
+            return;
+        }
+
+        if (ollamaContainer) {
+            ollamaContainer.innerHTML = `<div class="admin-loading-placeholder">Đang quét các mô hình trên máy chủ Ollama...</div>`;
+        }
+
+        try {
+            const apiBase = CONFIG.getApiBase();
+            const res = await fetch(`${apiBase}/api/admin/models/ollama-scan?username=${encodeURIComponent(currentUser.username)}&role=${currentUser.role}`, {
+                headers: {
+                    "X-User-Name": currentUser.username,
+                    "X-User-Role": currentUser.role
+                }
+            });
+            const data = await res.json();
+            if (data.success) {
+                detectedOllamaModels = data.models || [];
+
+                if (statStatus) {
+                    if (data.online) {
+                        statStatus.innerHTML = `<span style="color:#16a34a;">🟢 Hoạt Động</span>`;
+                    } else {
+                        statStatus.innerHTML = `<span style="color:#ef4444;">🔴 Ngoại Tuyến</span>`;
+                    }
+                }
+                if (statUrl) statUrl.textContent = data.ollama_url || "Ollama Host";
+                if (countBadge) countBadge.textContent = `${detectedOllamaModels.length} phát hiện`;
+
+                renderOllamaList();
+            } else {
+                if (ollamaContainer) {
+                    ollamaContainer.innerHTML = `<div class="admin-loading-placeholder" style="color:#ef4444;">Không thể quét Ollama: ${data.error || 'Lỗi server'}</div>`;
+                }
+            }
+        } catch (err) {
+            console.error("[AdminModels] Lỗi quét Ollama:", err);
+            if (ollamaContainer) {
+                ollamaContainer.innerHTML = `<div class="admin-loading-placeholder" style="color:#ef4444;">Không thể kết nối đến Ollama: ${err.message}</div>`;
+            }
+        }
+    }
+
+    function renderOllamaList() {
+        const ollamaContainer = document.getElementById("admin-ollama-list-container");
+        if (!ollamaContainer) return;
+
+        if (detectedOllamaModels.length === 0) {
+            ollamaContainer.innerHTML = `<div class="admin-loading-placeholder">Không tìm thấy mô hình nào trên máy chủ Ollama.</div>`;
+            return;
+        }
+
+        ollamaContainer.innerHTML = "";
+        const activeIds = new Set(allAdminModels.map(m => m.id.toLowerCase()));
+
+        detectedOllamaModels.forEach(om => {
+            const item = document.createElement("div");
+            item.className = "admin-ollama-item";
+
+            const isActive = activeIds.has(om.id.toLowerCase());
+
+            item.innerHTML = `
+                <div style="min-width: 0;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="ollama-tag-name">${escapeHtml(om.id)}</span>
+                        <span class="ollama-size-badge">${escapeHtml(om.size)}</span>
+                        ${om.multimodal ? '<span class="badge-vision" style="font-size: 0.65rem; padding: 1px 5px;">VISION</span>' : ''}
+                    </div>
+                </div>
+                <div>
+                    ${isActive ? `
+                        <span style="font-size: 0.76rem; font-weight: 600; color: #16a34a; background: rgba(34, 197, 94, 0.1); padding: 3px 8px; border-radius: 999px;">✓ Đã kích hoạt</span>
+                    ` : `
+                        <button type="button" class="btn btn-outline btn-xs btn-quick-add" style="color: #0284c7; border-color: #38bdf8;" data-id="${escapeHtml(om.id)}" data-mm="${om.multimodal ? '1' : '0'}">
+                            + Thêm vào web
+                        </button>
+                    `}
+                </div>
+            `;
+
+            const addBtn = item.querySelector(".btn-quick-add");
+            if (addBtn) {
+                addBtn.addEventListener("click", () => {
+                    if (!checkIsAdminUser()) {
+                        alert("Vui lòng đăng nhập tài khoản Quản trị viên (Admin) để thêm mô hình.");
+                        return;
+                    }
+                    openAddModelModal(om.id, `${om.id.toUpperCase()} (Ollama)`, om.multimodal);
+                });
+            }
+
+            ollamaContainer.appendChild(item);
+        });
+    }
+
+    async function handleSaveModelSubmit() {
+        if (!checkIsAdminUser()) {
+            alert("Bạn cần quyền Quản trị viên (Admin) để thêm mô hình.");
+            return;
+        }
+
+        const idInput = document.getElementById("admin-input-model-id");
+        const nameInput = document.getElementById("admin-input-model-name");
+        const provSelect = document.getElementById("admin-select-provider");
+        const mmChk = document.getElementById("admin-chk-multimodal");
+        const defChk = document.getElementById("admin-chk-default");
+        const descInput = document.getElementById("admin-input-model-desc");
+        const submitBtn = document.getElementById("admin-submit-model-btn");
+        const addModal = document.getElementById("admin-add-model-modal");
+
+        const modelId = idInput ? idInput.value.trim() : "";
+        const modelName = nameInput ? nameInput.value.trim() : "";
+        const provider = provSelect ? provSelect.value : "ollama";
+        const isMultimodal = mmChk ? mmChk.checked : false;
+        const isDefault = defChk ? defChk.checked : false;
+        const description = descInput ? descInput.value.trim() : "";
+
+        if (!modelId || !modelName) {
+            alert("Vui lòng điền đầy đủ Mã định danh và Tên hiển thị của mô hình.");
+            return;
+        }
+
+        const payload = {
+            id: modelId,
+            name: modelName,
+            provider: provider,
+            multimodal: isMultimodal,
+            is_default: isDefault,
+            description: description
+        };
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Đang lưu vào Neon DB...";
+        }
+
+        try {
+            const apiBase = CONFIG.getApiBase();
+            const res = await fetch(`${apiBase}/api/admin/models?username=${encodeURIComponent(currentUser.username)}&role=${currentUser.role}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-User-Name": currentUser.username,
+                    "X-User-Role": currentUser.role
+                },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`Mô hình "${modelName}" (${modelId}) đã được lưu thành công vào Neon DB!`);
+                if (addModal) addModal.style.display = "none";
+                const form = document.getElementById("admin-add-model-form");
+                if (form) form.reset();
+                await loadAdminModelsData();
+                renderOllamaList();
+            } else {
+                alert(`Lỗi khi lưu mô hình: ${data.error || 'Lỗi server'}`);
+            }
+        } catch (err) {
+            console.error("[AdminModels] Lỗi thêm mô hình:", err);
+            alert(`Không thể kết nối đến server: ${err.message}`);
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Lưu Vào Neon DB & Kích Hoạt";
+            }
+        }
+    }
+
+    async function handleDeleteModel(modelId, modelName) {
+        if (!checkIsAdminUser()) {
+            alert("Bạn cần quyền Quản trị viên (Admin) để xóa mô hình.");
+            return;
+        }
+
+        if (!confirm(`Bạn có chắc chắn muốn xóa mô hình "${modelName}" (${modelId}) khỏi toàn bộ hệ thống?\n\nNgười dùng trên web sẽ không thể chọn mô hình này nữa.`)) {
+            return;
+        }
+
+        try {
+            const apiBase = CONFIG.getApiBase();
+            const res = await fetch(`${apiBase}/api/admin/models/${encodeURIComponent(modelId)}?username=${encodeURIComponent(currentUser.username)}&role=${currentUser.role}`, {
+                method: "DELETE",
+                headers: {
+                    "X-User-Name": currentUser.username,
+                    "X-User-Role": currentUser.role
+                }
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`Đã xóa mô hình "${modelName}" thành công khỏi Neon DB!`);
+                await loadAdminModelsData();
+                renderOllamaList();
+            } else {
+                alert(`Lỗi khi xóa mô hình: ${data.error || 'Lỗi server'}`);
+            }
+        } catch (err) {
+            console.error("[AdminModels] Lỗi xóa model:", err);
+            alert(`Không thể kết nối đến server: ${err.message}`);
+        }
+    }
+
+    async function handleSetDefaultModel(modelId, modelName) {
+        if (!checkIsAdminUser()) {
+            alert("Bạn cần quyền Quản trị viên (Admin) để đổi mô hình mặc định.");
+            return;
+        }
+
+        try {
+            const apiBase = CONFIG.getApiBase();
+            const res = await fetch(`${apiBase}/api/admin/models/set-default?username=${encodeURIComponent(currentUser.username)}&role=${currentUser.role}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-User-Name": currentUser.username,
+                    "X-User-Role": currentUser.role
+                },
+                body: JSON.stringify({ id: modelId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`Đã đặt "${modelName}" (${modelId}) làm mô hình mặc định trên toàn hệ thống!`);
+                await loadAdminModelsData();
+            } else {
+                alert(`Lỗi: ${data.error || 'Không thể đặt mặc định'}`);
+            }
+        } catch (err) {
+            console.error("[AdminModels] Lỗi đặt mặc định:", err);
+            alert(`Lỗi kết nối: ${err.message}`);
+        }
+    }
+
     // ---------------------- KHỞI CHẠY LẦN ĐẦU ----------------------
     updateUserUI();
     loadConfig();
     loadDocumentsList();
     loadHistorySessions();
     initOfficeStudio();
+    initRoleplay();
 });
