@@ -750,11 +750,38 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function updateThemeIcon(isDark) {
-        if (!themeToggleBtn) return;
-        themeToggleBtn.innerHTML = isDark
-            ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`
-            : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
-        themeToggleBtn.title = isDark ? "Chuyển sang giao diện Sáng" : "Chuyển sang giao diện Tối";
+        const themeIconContainer = document.getElementById("theme-icon-container");
+        const themeModeText = document.getElementById("theme-mode-text");
+        const themeBtnLight = document.getElementById("theme-btn-light");
+        const themeBtnDark = document.getElementById("theme-btn-dark");
+
+        const iconSvg = isDark
+            ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`
+            : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
+
+        if (themeIconContainer) {
+            themeIconContainer.innerHTML = iconSvg;
+        } else if (themeToggleBtn) {
+            themeToggleBtn.innerHTML = iconSvg;
+        }
+
+        if (themeModeText) {
+            themeModeText.textContent = isDark ? "Tối" : "Sáng";
+        }
+
+        if (themeToggleBtn) {
+            themeToggleBtn.title = isDark ? "Chuyển sang giao diện Sáng" : "Chuyển sang giao diện Tối";
+        }
+
+        if (themeBtnLight && themeBtnDark) {
+            if (isDark) {
+                themeBtnDark.classList.add("active");
+                themeBtnLight.classList.remove("active");
+            } else {
+                themeBtnLight.classList.add("active");
+                themeBtnDark.classList.remove("active");
+            }
+        }
     }
 
     if (themeToggleBtn) {
@@ -765,8 +792,235 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Chạy khởi tạo theme ngay
+    // ---------------------- CỠ CHỮ & THU PHÓNG (FONT SCALING) ----------------------
+    function setFontScale(scale) {
+        document.body.classList.remove("font-compact", "font-normal", "font-large");
+        if (scale === "compact") {
+            document.body.classList.add("font-compact");
+        } else if (scale === "large") {
+            document.body.classList.add("font-large");
+        } else {
+            document.body.classList.add("font-normal");
+            scale = "normal";
+        }
+        localStorage.setItem("HPU2_FONT_SCALE", scale);
+        updateFontScaleButtons(scale);
+    }
+
+    function updateFontScaleButtons(activeScale) {
+        const buttons = document.querySelectorAll(".font-scale-btn");
+        buttons.forEach(btn => {
+            if (btn.dataset.scale === activeScale) {
+                btn.classList.add("active");
+            } else {
+                btn.classList.remove("active");
+            }
+        });
+    }
+
+    function initFontScale() {
+        const savedScale = localStorage.getItem("HPU2_FONT_SCALE") || "normal";
+        setFontScale(savedScale);
+
+        const buttons = document.querySelectorAll(".font-scale-btn");
+        buttons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const scale = btn.dataset.scale || "normal";
+                setFontScale(scale);
+            });
+        });
+    }
+
+    // ---------------------- USER MENU DROPDOWN & SETTINGS MODAL ----------------------
+    function initUserMenuAndSettings() {
+        const userMenuTriggerBtn = document.getElementById("user-menu-trigger-btn");
+        const userDropdownMenu = document.getElementById("user-dropdown-menu");
+        const dropdownSidebarBtn = document.getElementById("dropdown-sidebar-btn");
+        
+        // Dropdown toggle
+        if (userMenuTriggerBtn && userDropdownMenu) {
+            userMenuTriggerBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const isVisible = userDropdownMenu.style.display === "flex";
+                userDropdownMenu.style.display = isVisible ? "none" : "flex";
+                userMenuTriggerBtn.classList.toggle("active", !isVisible);
+                userMenuTriggerBtn.setAttribute("aria-expanded", !isVisible ? "true" : "false");
+            });
+
+            // Click outside to close
+            document.addEventListener("click", (e) => {
+                if (userDropdownMenu.style.display !== "none") {
+                    if (!userDropdownMenu.contains(e.target) && !userMenuTriggerBtn.contains(e.target)) {
+                        userDropdownMenu.style.display = "none";
+                        userMenuTriggerBtn.classList.remove("active");
+                        userMenuTriggerBtn.setAttribute("aria-expanded", "false");
+                    }
+                }
+            });
+
+            // Click on items to close
+            const actionBtns = userDropdownMenu.querySelectorAll(".dropdown-action-btn");
+            actionBtns.forEach(btn => {
+                btn.addEventListener("click", () => {
+                    userDropdownMenu.style.display = "none";
+                    if (userMenuTriggerBtn) {
+                        userMenuTriggerBtn.classList.remove("active");
+                        userMenuTriggerBtn.setAttribute("aria-expanded", "false");
+                    }
+                });
+            });
+        }
+
+        // Dropdown sidebar button
+        if (dropdownSidebarBtn) {
+            dropdownSidebarBtn.addEventListener("click", () => {
+                if (typeof toggleSidebar === "function") {
+                    toggleSidebar();
+                } else {
+                    const btn = document.getElementById("toggle-sidebar-btn");
+                    if (btn) btn.click();
+                }
+            });
+        }
+
+        // Settings Modal
+        const systemSettingsModal = document.getElementById("system-settings-modal");
+        const headerSettingsBtn = document.getElementById("header-settings-btn");
+        const menuOpenSettingsBtn = document.getElementById("menu-open-settings-btn");
+        const closeSettingsModalBtn = document.getElementById("close-settings-modal-btn");
+        const settingsCancelBtn = document.getElementById("settings-cancel-btn");
+        const settingsSaveBtn = document.getElementById("settings-save-btn");
+        const settingsApiUrlInput = document.getElementById("settings-api-url-input");
+        const settingsTestApiBtn = document.getElementById("settings-test-api-btn");
+        const settingsApiStatusText = document.getElementById("settings-api-status-text");
+        const settingsClearCacheBtn = document.getElementById("settings-clear-cache-btn");
+        const settingsClearStatus = document.getElementById("settings-clear-status");
+        const themeBtnLight = document.getElementById("theme-btn-light");
+        const themeBtnDark = document.getElementById("theme-btn-dark");
+
+        function openSettingsModal() {
+            if (!systemSettingsModal) return;
+            if (settingsApiUrlInput) {
+                const currentApi = (typeof CONFIG !== "undefined" && CONFIG.getApiBase) ? CONFIG.getApiBase() : window.location.origin;
+                settingsApiUrlInput.value = currentApi;
+            }
+            if (settingsApiStatusText) {
+                const currentApi = (typeof CONFIG !== "undefined" && CONFIG.getApiBase) ? CONFIG.getApiBase() : window.location.origin;
+                settingsApiStatusText.textContent = `Đang kết nối: ${currentApi}`;
+            }
+            const isDark = document.body.classList.contains("dark-theme");
+            if (themeBtnLight && themeBtnDark) {
+                if (isDark) {
+                    themeBtnDark.classList.add("active");
+                    themeBtnLight.classList.remove("active");
+                } else {
+                    themeBtnLight.classList.add("active");
+                    themeBtnDark.classList.remove("active");
+                }
+            }
+            const currentScale = localStorage.getItem("HPU2_FONT_SCALE") || "normal";
+            updateFontScaleButtons(currentScale);
+            systemSettingsModal.style.display = "flex";
+        }
+
+        function closeSettingsModal() {
+            if (systemSettingsModal) systemSettingsModal.style.display = "none";
+        }
+
+        if (headerSettingsBtn) headerSettingsBtn.addEventListener("click", openSettingsModal);
+        if (menuOpenSettingsBtn) menuOpenSettingsBtn.addEventListener("click", openSettingsModal);
+        if (closeSettingsModalBtn) closeSettingsModalBtn.addEventListener("click", closeSettingsModal);
+        if (settingsCancelBtn) settingsCancelBtn.addEventListener("click", closeSettingsModal);
+
+        if (systemSettingsModal) {
+            systemSettingsModal.addEventListener("click", (e) => {
+                if (e.target === systemSettingsModal) closeSettingsModal();
+            });
+        }
+
+        // Theme selector buttons in Settings
+        if (themeBtnLight) {
+            themeBtnLight.addEventListener("click", () => {
+                document.body.classList.remove("dark-theme");
+                localStorage.setItem("HPU2_THEME", "light");
+                updateThemeIcon(false);
+            });
+        }
+        if (themeBtnDark) {
+            themeBtnDark.addEventListener("click", () => {
+                document.body.classList.add("dark-theme");
+                localStorage.setItem("HPU2_THEME", "dark");
+                updateThemeIcon(true);
+            });
+        }
+
+        // Test API button
+        if (settingsTestApiBtn && settingsApiUrlInput) {
+            settingsTestApiBtn.addEventListener("click", async () => {
+                const url = settingsApiUrlInput.value.trim().replace(/\/+$/, "");
+                if (!url) return;
+                settingsTestApiBtn.disabled = true;
+                settingsTestApiBtn.textContent = "Đang kiểm tra...";
+                if (settingsApiStatusText) settingsApiStatusText.textContent = `Đang kết nối tới ${url}...`;
+                try {
+                    const res = await fetch(`${url}/api/models`, { method: "GET", signal: AbortSignal.timeout(4000) });
+                    if (res.ok) {
+                        if (settingsApiStatusText) {
+                            settingsApiStatusText.innerHTML = `<span style="color: #10b981; font-weight: 600;">🟢 Kết nối thành công! (API Online)</span>`;
+                        }
+                    } else {
+                        if (settingsApiStatusText) {
+                            settingsApiStatusText.innerHTML = `<span style="color: #f59e0b; font-weight: 600;">🟡 Máy chủ phản hồi mã ${res.status}</span>`;
+                        }
+                    }
+                } catch (err) {
+                    if (settingsApiStatusText) {
+                        settingsApiStatusText.innerHTML = `<span style="color: #ef4444; font-weight: 600;">🔴 Lỗi kết nối: ${err.message || 'Không thể liên lạc'}</span>`;
+                    }
+                } finally {
+                    settingsTestApiBtn.disabled = false;
+                    settingsTestApiBtn.textContent = "Kiểm Tra";
+                }
+            });
+        }
+
+        // Save Settings button
+        if (settingsSaveBtn && settingsApiUrlInput) {
+            settingsSaveBtn.addEventListener("click", () => {
+                const url = settingsApiUrlInput.value.trim().replace(/\/+$/, "");
+                if (url) {
+                    localStorage.setItem("HPU2_API_URL", url);
+                    if (typeof CONFIG !== "undefined") CONFIG.API_BASE = url;
+                }
+                closeSettingsModal();
+                if (typeof showToast === "function") {
+                    showToast("Đã lưu thiết lập hệ thống thành công!", "success");
+                }
+                if (typeof loadConfig === "function") loadConfig();
+            });
+        }
+
+        // Clear Cache button
+        if (settingsClearCacheBtn) {
+            settingsClearCacheBtn.addEventListener("click", () => {
+                sessionStorage.clear();
+                if (settingsClearStatus) {
+                    settingsClearStatus.style.display = "inline-block";
+                    setTimeout(() => {
+                        settingsClearStatus.style.display = "none";
+                    }, 2500);
+                }
+                if (typeof showToast === "function") {
+                    showToast("Đã dọn dẹp bộ nhớ tạm thành công!", "info");
+                }
+            });
+        }
+    }
+
+    // Chạy khởi tạo theme & user menu ngay
     initTheme();
+    initFontScale();
+    initUserMenuAndSettings();
     initChatParameters();
 
     // ---------------------- TABS NAVIGATION ----------------------
@@ -1197,17 +1451,27 @@ document.addEventListener("DOMContentLoaded", () => {
         // Tab Quản lý LLM luôn hiển thị trên thanh điều hướng để người dùng có thể nhấp vào bất kỳ lúc nào
         if (tabNavAdminModels) tabNavAdminModels.style.display = "inline-flex";
 
+        const userAvatarBadge = document.getElementById("user-avatar-badge");
+        const dropdownUserAvatar = document.getElementById("dropdown-user-avatar");
+        const dropdownDisplayName = document.getElementById("dropdown-display-name");
+        const userDropdownMenu = document.getElementById("user-dropdown-menu");
+
         if (currentUser && currentUser.username && currentUser.username !== "guest") {
-            loggedInBox.style.display = "flex";
+            loggedInBox.style.display = "inline-flex";
             if (authButtonsGroup) authButtonsGroup.style.display = "none";
             userDisplayName.textContent = currentUser.username;
+            if (dropdownDisplayName) dropdownDisplayName.textContent = currentUser.username;
+
+            const initial = (currentUser.username.trim().charAt(0) || "U").toUpperCase();
+            if (userAvatarBadge) userAvatarBadge.textContent = initial;
+            if (dropdownUserAvatar) dropdownUserAvatar.textContent = initial;
 
             const isAdmin = currentUser.role === "admin" || (currentUser.username && currentUser.username.toLowerCase() === "admin");
             if (isAdmin) {
                 userRoleBadge.textContent = "👑 Quản trị viên";
                 userRoleBadge.className = "user-role-badge admin-badge";
                 if (adminUserFilter) adminUserFilter.style.display = "inline-block";
-                if (headerAdminModelsBtn) headerAdminModelsBtn.style.display = "inline-block";
+                if (headerAdminModelsBtn) headerAdminModelsBtn.style.display = "flex";
             } else {
                 userRoleBadge.textContent = "👤 Người dùng";
                 userRoleBadge.className = "user-role-badge user-badge";
@@ -1216,6 +1480,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         } else {
             loggedInBox.style.display = "none";
+            if (userDropdownMenu) userDropdownMenu.style.display = "none";
             if (authButtonsGroup) authButtonsGroup.style.display = "flex";
             if (adminUserFilter) adminUserFilter.style.display = "none";
             if (headerAdminModelsBtn) headerAdminModelsBtn.style.display = "none";

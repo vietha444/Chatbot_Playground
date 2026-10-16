@@ -7,6 +7,12 @@ const CONFIG = {
     API_BASE: "http://127.0.0.1:5000",
 
     getApiBase: function() {
+        if (typeof window !== "undefined" && window.localStorage) {
+            const customApi = window.localStorage.getItem("HPU2_API_URL");
+            if (customApi && customApi.trim()) {
+                return customApi.trim().replace(/\/+$/, "");
+            }
+        }
         if (typeof window !== "undefined" && window.BACKEND_API_URL) {
             return window.BACKEND_API_URL.replace(/\/+$/, "");
         }
