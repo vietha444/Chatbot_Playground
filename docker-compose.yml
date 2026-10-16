@@ -1,0 +1,37 @@
+services:
+  ai-playground:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-playground
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      # Giữ nguyên mô hình AI (Stable Diffusion, BGE, YOLO) ngoài host
+      - ./models:/app/models
+      # Lưu trữ bền vững dữ liệu chat, ChromaDB, cấu hình
+      - ./data:/app/data
+      - ./unified_app/data:/app/unified_app/data
+      # Lưu trữ tài liệu upload và ảnh AI sinh ra
+      - ./uploads:/app/uploads
+      - ./unified_app/uploads:/app/unified_app/uploads
+    environment:
+      - PORT=5000
+      - TRANSFORMERS_NO_TF=1
+      - USE_TF=0
+      - PYTHONIOENCODING=utf-8
+      # Kết nối Ollama trên máy host
+      - OLLAMA_LOCAL_URL=http://host.docker.internal:11434
+      # Hoặc Ollama máy chủ từ xa qua Tailscale
+      - OLLAMA_REMOTE_URL=http://chatbot.tail36da8e.ts.net:11434
+    extra_hosts:
+      # Cho phép container gọi vào các dịch vụ đang chạy trên máy Host (như Ollama)
+      - "host.docker.internal:host-gateway"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
