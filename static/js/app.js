@@ -1,5 +1,5 @@
 /**
- * HPU2 AI Assistant - Cloudflare Frontend Client Logic (v2.3)
+ * AI Playground - Cloudflare Frontend Client Logic (v2.3)
  * - Giao diện mặc định là SÁNG (Light Theme) cao cấp, thẩm mỹ Apple/Stripe
  * - Tách riêng 2 tab: Trò Chuyện AI Trực Tiếp & Hỏi Đáp RAG Tài Liệu
  * - Bộ chọn mô hình và thanh điều khiển chuyển xuống đáy khung chat
@@ -991,7 +991,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const badgeText = chatType === "rag" ? "📚 Chế Độ RAG" : "✨ Chat Trực Tiếp";
 
             senderTitle.innerHTML = `
-                <span class="sender-name">HPU2 AI Assistant</span>
+                <span class="sender-name">AI Playground</span>
                 <span class="sender-badge ${badgeClass}">${badgeText}</span>
                 <span class="message-time">${timeStr}</span>
             `;
@@ -1403,7 +1403,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     history: directChatHistory,
                     username: currentUser.username,
                     user_images: imagesToSend.map(img => img.base64).filter(Boolean),
-                    attached_files: filesToSend
+                    attached_files: filesToSend,
+                    options: getActiveChatOptions(),
+                    system_prompt: getActiveSystemPrompt()
                 })
             });
 
@@ -1466,7 +1468,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                     <div class="message-content">
                         <div class="message-sender-title">
-                            <span class="sender-name">HPU2 AI Assistant</span>
+                            <span class="sender-name">AI Playground</span>
                             <span class="sender-badge rag">📚 Chế Độ RAG</span>
                             <span class="message-time">${formatTime(new Date())}</span>
                         </div>
@@ -1560,7 +1562,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     history: ragChatHistory,
                     username: currentUser.username,
                     user_images: imagesToSend.map(img => img.base64).filter(Boolean),
-                    attached_files: filesToSend
+                    attached_files: filesToSend,
+                    options: getActiveChatOptions(),
+                    system_prompt: getActiveSystemPrompt()
                 })
             });
 
@@ -3234,7 +3238,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                     <div class="message-content">
                         <div class="message-sender-title">
-                            <span class="sender-name">HPU2 AI Assistant</span>
+                            <span class="sender-name">AI Playground</span>
                             <span class="sender-badge rag">📚 Chế Độ RAG</span>
                             <span class="message-time">${formatTime(new Date())}</span>
                         </div>
@@ -5849,5 +5853,297 @@ document.addEventListener("DOMContentLoaded", () => {
     loadDocumentsList();
     loadHistorySessions();
     initOfficeStudio();
+
+    // =========================================================================
+    // AI PLAYGROUND: LLM PARAMETERS MANAGEMENT (DRAWER & PRESETS)
+    // =========================================================================
+    const DEFAULT_CHAT_PARAMS = {
+        temperature: 0.70,
+        num_ctx: 8192,
+        top_p: 0.90,
+        repeat_penalty: 1.10,
+        num_predict: 2048,
+        system_prompt: ""
+    };
+
+    const CHAT_PRESETS = {
+        default: {
+            temperature: 0.70,
+            num_ctx: 8192,
+            top_p: 0.90,
+            repeat_penalty: 1.10,
+            num_predict: 2048
+        },
+        coding: {
+            temperature: 0.15,
+            num_ctx: 8192,
+            top_p: 0.80,
+            repeat_penalty: 1.05,
+            num_predict: 4096
+        },
+        creative: {
+            temperature: 1.25,
+            num_ctx: 8192,
+            top_p: 0.95,
+            repeat_penalty: 1.15,
+            num_predict: 2048
+        },
+        deep: {
+            temperature: 0.30,
+            num_ctx: 16384,
+            top_p: 0.85,
+            repeat_penalty: 1.10,
+            num_predict: 4096
+        }
+    };
+
+    let activeChatParams = { ...DEFAULT_CHAT_PARAMS };
+
+    function loadSavedChatParams() {
+        try {
+            const raw = localStorage.getItem("AI_PLAYGROUND_PARAMS");
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                activeChatParams = { ...DEFAULT_CHAT_PARAMS, ...parsed };
+            }
+        } catch (_) {}
+    }
+
+    function saveChatParams() {
+        try {
+            localStorage.setItem("AI_PLAYGROUND_PARAMS", JSON.stringify(activeChatParams));
+        } catch (_) {}
+    }
+
+    function updateChatParamsBadges() {
+        const tempStr = parseFloat(activeChatParams.temperature || 0.7).toFixed(2);
+        const ctxK = Math.round(parseInt(activeChatParams.num_ctx || 8192) / 1024) + "K";
+        const badgeText = `${tempStr} / ${ctxK}`;
+
+        const directIndicator = document.getElementById("direct-params-indicator");
+        if (directIndicator) directIndicator.textContent = badgeText;
+
+        const ragIndicator = document.getElementById("rag-params-indicator");
+        if (ragIndicator) ragIndicator.textContent = badgeText;
+    }
+
+    function syncChatParamsUI() {
+        // Direct drawer elements
+        const dTempSlider = document.getElementById("direct-param-temp");
+        const dTempVal = document.getElementById("direct-param-temp-val");
+        if (dTempSlider) dTempSlider.value = activeChatParams.temperature;
+        if (dTempVal) dTempVal.textContent = parseFloat(activeChatParams.temperature || 0.7).toFixed(2);
+
+        const dCtxSelect = document.getElementById("direct-param-ctx");
+        const dCtxVal = document.getElementById("direct-param-ctx-val");
+        if (dCtxSelect) dCtxSelect.value = activeChatParams.num_ctx;
+        if (dCtxVal) dCtxVal.textContent = Number(activeChatParams.num_ctx || 8192).toLocaleString() + " tokens";
+
+        const dToppSlider = document.getElementById("direct-param-topp");
+        const dToppVal = document.getElementById("direct-param-topp-val");
+        if (dToppSlider) dToppSlider.value = activeChatParams.top_p;
+        if (dToppVal) dToppVal.textContent = parseFloat(activeChatParams.top_p || 0.9).toFixed(2);
+
+        const dRepSlider = document.getElementById("direct-param-rep");
+        const dRepVal = document.getElementById("direct-param-rep-val");
+        if (dRepSlider) dRepSlider.value = activeChatParams.repeat_penalty;
+        if (dRepVal) dRepVal.textContent = parseFloat(activeChatParams.repeat_penalty || 1.1).toFixed(2);
+
+        const dMaxSelect = document.getElementById("direct-param-max-tokens");
+        const dMaxVal = document.getElementById("direct-param-max-tokens-val");
+        if (dMaxSelect) dMaxSelect.value = activeChatParams.num_predict;
+        if (dMaxVal) dMaxVal.textContent = activeChatParams.num_predict === -1 ? "Không giới hạn" : Number(activeChatParams.num_predict || 2048).toLocaleString();
+
+        const dSysPrompt = document.getElementById("direct-param-system-prompt");
+        if (dSysPrompt) dSysPrompt.value = activeChatParams.system_prompt || "";
+
+        // RAG drawer elements
+        const rTempSlider = document.getElementById("rag-param-temp");
+        const rTempVal = document.getElementById("rag-param-temp-val");
+        if (rTempSlider) rTempSlider.value = activeChatParams.temperature;
+        if (rTempVal) rTempVal.textContent = parseFloat(activeChatParams.temperature || 0.7).toFixed(2);
+
+        const rCtxSelect = document.getElementById("rag-param-ctx");
+        const rCtxVal = document.getElementById("rag-param-ctx-val");
+        if (rCtxSelect) rCtxSelect.value = activeChatParams.num_ctx;
+        if (rCtxVal) rCtxVal.textContent = Number(activeChatParams.num_ctx || 8192).toLocaleString() + " tokens";
+
+        const rToppSlider = document.getElementById("rag-param-topp");
+        const rToppVal = document.getElementById("rag-param-topp-val");
+        if (rToppSlider) rToppSlider.value = activeChatParams.top_p;
+        if (rToppVal) rToppVal.textContent = parseFloat(activeChatParams.top_p || 0.9).toFixed(2);
+
+        const rRepSlider = document.getElementById("rag-param-rep");
+        const rRepVal = document.getElementById("rag-param-rep-val");
+        if (rRepSlider) rRepSlider.value = activeChatParams.repeat_penalty;
+        if (rRepVal) rRepVal.textContent = parseFloat(activeChatParams.repeat_penalty || 1.1).toFixed(2);
+
+        const rMaxSelect = document.getElementById("rag-param-max-tokens");
+        const rMaxVal = document.getElementById("rag-param-max-tokens-val");
+        if (rMaxSelect) rMaxSelect.value = activeChatParams.num_predict;
+        if (rMaxVal) rMaxVal.textContent = activeChatParams.num_predict === -1 ? "Không giới hạn" : Number(activeChatParams.num_predict || 2048).toLocaleString();
+
+        const rSysPrompt = document.getElementById("rag-param-system-prompt");
+        if (rSysPrompt) rSysPrompt.value = activeChatParams.system_prompt || "";
+
+        updateChatParamsBadges();
+    }
+
+    function applyChatPreset(presetName) {
+        const preset = CHAT_PRESETS[presetName];
+        if (!preset) return;
+        activeChatParams = {
+            ...activeChatParams,
+            ...preset
+        };
+        saveChatParams();
+        syncChatParamsUI();
+
+        // Update active class on preset pills in both drawers
+        document.querySelectorAll(".param-preset-pill").forEach(pill => {
+            if (pill.getAttribute("data-preset") === presetName) {
+                pill.classList.add("active");
+            } else {
+                pill.classList.remove("active");
+            }
+        });
+    }
+
+    function initChatParameters() {
+        loadSavedChatParams();
+        syncChatParamsUI();
+
+        // Toggle buttons
+        const directToggleBtn = document.getElementById("direct-toggle-params-btn");
+        const directDrawer = document.getElementById("direct-params-drawer");
+        if (directToggleBtn && directDrawer) {
+            directToggleBtn.addEventListener("click", () => {
+                const isOpen = directDrawer.style.display !== "none";
+                directDrawer.style.display = isOpen ? "none" : "block";
+                directToggleBtn.classList.toggle("active", !isOpen);
+                if (!isOpen) syncChatParamsUI();
+            });
+        }
+
+        const ragToggleBtn = document.getElementById("rag-toggle-params-btn");
+        const ragDrawer = document.getElementById("rag-params-drawer");
+        if (ragToggleBtn && ragDrawer) {
+            ragToggleBtn.addEventListener("click", () => {
+                const isOpen = ragDrawer.style.display !== "none";
+                ragDrawer.style.display = isOpen ? "none" : "block";
+                ragToggleBtn.classList.toggle("active", !isOpen);
+                if (!isOpen) syncChatParamsUI();
+            });
+        }
+
+        // Close buttons
+        const directCloseBtn = document.getElementById("direct-params-close-btn");
+        if (directCloseBtn && directDrawer) {
+            directCloseBtn.addEventListener("click", () => {
+                directDrawer.style.display = "none";
+                if (directToggleBtn) directToggleBtn.classList.remove("active");
+            });
+        }
+
+        const ragCloseBtn = document.getElementById("rag-params-close-btn");
+        if (ragCloseBtn && ragDrawer) {
+            ragCloseBtn.addEventListener("click", () => {
+                ragDrawer.style.display = "none";
+                if (ragToggleBtn) ragToggleBtn.classList.remove("active");
+            });
+        }
+
+        // Reset buttons
+        const resetHandler = () => {
+            activeChatParams = { ...DEFAULT_CHAT_PARAMS };
+            saveChatParams();
+            syncChatParamsUI();
+            applyChatPreset("default");
+        };
+        const directResetBtn = document.getElementById("direct-params-reset-btn");
+        if (directResetBtn) directResetBtn.addEventListener("click", resetHandler);
+        const ragResetBtn = document.getElementById("rag-params-reset-btn");
+        if (ragResetBtn) ragResetBtn.addEventListener("click", resetHandler);
+
+        // Preset pill clicks
+        document.querySelectorAll(".param-preset-pill").forEach(pill => {
+            pill.addEventListener("click", () => {
+                const preset = pill.getAttribute("data-preset");
+                applyChatPreset(preset);
+            });
+        });
+
+        // Sliders binding
+        const bindSlider = (sliderId, valId, key, isFloat) => {
+            const el = document.getElementById(sliderId);
+            const valEl = document.getElementById(valId);
+            if (el) {
+                el.addEventListener("input", () => {
+                    const parsedVal = isFloat ? parseFloat(el.value) : parseInt(el.value);
+                    activeChatParams[key] = parsedVal;
+                    if (valEl) valEl.textContent = isFloat ? parsedVal.toFixed(2) : parsedVal;
+                    saveChatParams();
+                    updateChatParamsBadges();
+                });
+            }
+        };
+
+        bindSlider("direct-param-temp", "direct-param-temp-val", "temperature", true);
+        bindSlider("rag-param-temp", "rag-param-temp-val", "temperature", true);
+
+        bindSlider("direct-param-topp", "direct-param-topp-val", "top_p", true);
+        bindSlider("rag-param-topp", "rag-param-topp-val", "top_p", true);
+
+        bindSlider("direct-param-rep", "direct-param-rep-val", "repeat_penalty", true);
+        bindSlider("rag-param-rep", "rag-param-rep-val", "repeat_penalty", true);
+
+        const bindSelect = (selectId, valId, key, isInt, suffix = "") => {
+            const el = document.getElementById(selectId);
+            const valEl = document.getElementById(valId);
+            if (el) {
+                el.addEventListener("change", () => {
+                    const parsedVal = isInt ? parseInt(el.value) : el.value;
+                    activeChatParams[key] = parsedVal;
+                    if (valEl) valEl.textContent = isInt ? (parsedVal === -1 ? "Không giới hạn" : Number(parsedVal).toLocaleString() + suffix) : parsedVal;
+                    saveChatParams();
+                    updateChatParamsBadges();
+                });
+            }
+        };
+
+        bindSelect("direct-param-ctx", "direct-param-ctx-val", "num_ctx", true, " tokens");
+        bindSelect("rag-param-ctx", "rag-param-ctx-val", "num_ctx", true, " tokens");
+
+        bindSelect("direct-param-max-tokens", "direct-param-max-tokens-val", "num_predict", true);
+        bindSelect("rag-param-max-tokens", "rag-param-max-tokens-val", "num_predict", true);
+
+        const bindText = (textareaId, key) => {
+            const el = document.getElementById(textareaId);
+            if (el) {
+                el.addEventListener("input", () => {
+                    activeChatParams[key] = el.value.trim();
+                    saveChatParams();
+                });
+            }
+        };
+        bindText("direct-param-system-prompt", "system_prompt");
+        bindText("rag-param-system-prompt", "system_prompt");
+    }
+
+    function getActiveChatOptions() {
+        return {
+            temperature: parseFloat(activeChatParams.temperature !== undefined ? activeChatParams.temperature : 0.70),
+            num_ctx: parseInt(activeChatParams.num_ctx || 8192),
+            top_p: parseFloat(activeChatParams.top_p !== undefined ? activeChatParams.top_p : 0.90),
+            repeat_penalty: parseFloat(activeChatParams.repeat_penalty !== undefined ? activeChatParams.repeat_penalty : 1.10),
+            num_predict: parseInt(activeChatParams.num_predict !== undefined ? activeChatParams.num_predict : 2048)
+        };
+    }
+
+    function getActiveSystemPrompt() {
+        return (activeChatParams.system_prompt || "").trim();
+    }
+
     initRoleplay();
+    initChatParameters();
 });

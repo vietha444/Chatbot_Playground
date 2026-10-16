@@ -116,14 +116,14 @@ def handle_500(e):
 def index_or_api_info():
     if request.headers.get('Accept') and 'application/json' in request.headers.get('Accept'):
         return jsonify({
-            "service": "HPU2 AI Unified App",
+            "service": "AI Playground Unified App",
             "status": "online",
             "version": "2.4.0"
         })
     try:
         return render_template("index.html")
     except Exception:
-        return jsonify({"service": "HPU2 AI Unified App", "status": "online"})
+        return jsonify({"service": "AI Playground Unified App", "status": "online"})
 
 
 @app.route('/api/health', methods=['GET'])
@@ -511,6 +511,10 @@ def chat():
     score_threshold = float(data.get("score_threshold", Config.RERANKER_THRESHOLD))
     client_history = data.get("history", [])
 
+    # Tùy chỉnh thông số AI chuyên sâu (LLM Parameters & System Prompt)
+    custom_options = data.get("options") or data.get("custom_options") or {}
+    system_prompt = data.get("system_prompt")
+
     # Hỗ trợ tệp đính kèm trực tiếp (Word, Excel, PDF, PPTX, Text, Code...)
     attached_files = data.get("attached_files") or []
     if isinstance(attached_files, dict):
@@ -670,8 +674,14 @@ def chat():
 
         bot_reply = ""
         try:
-            # 3. Stream từng token từ LLM (kèm danh sách ảnh Multimodal)
-            for token in llm_service.stream_chat(current_messages, model_id=model_id, images=all_query_images):
+            # 3. Stream từng token từ LLM (kèm danh sách ảnh Multimodal & Thông số tùy chỉnh)
+            for token in llm_service.stream_chat(
+                current_messages,
+                model_id=model_id,
+                images=all_query_images,
+                options=custom_options,
+                system_prompt=system_prompt
+            ):
                 bot_reply += token
                 yield f"data: {json.dumps({'type': 'token', 'content': token}, ensure_ascii=False)}\n\n"
         except Exception as e:

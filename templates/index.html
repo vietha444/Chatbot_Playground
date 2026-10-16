@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HPU2 AI Assistant - Trợ Lý AI & Hệ Thống RAG Đa Năng</title>
+    <title>AI Playground - Trợ Lý AI & Hệ Thống RAG Đa Năng</title>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,8 +22,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 
     <!-- App Styles -->
-    <link rel="stylesheet" href="css/style.css?v=2.8.5">
-    <link rel="stylesheet" href="css/office.css?v=2.8.5">
+    <link rel="stylesheet" href="css/style.css?v=3.1.0">
+    <link rel="stylesheet" href="css/office.css?v=3.1.0">
 </head>
 <body>
 
@@ -38,7 +38,7 @@
                         </svg>
                     </div>
                     <div class="brand-info">
-                        <h1>HPU2 AI Assistant</h1>
+                        <h1>AI Playground</h1>
                         <span class="brand-subtitle">Trợ Lý AI & Nền Tảng RAG Đa Năng</span>
                     </div>
                 </div>
@@ -170,9 +170,126 @@
                                 </select>
                             </div>
                             <div class="dock-actions-right">
+                                <button id="direct-toggle-params-btn" type="button" class="btn btn-outline btn-xs dock-params-btn" title="Tùy chỉnh thông số AI (Temperature, Context Length, Top-P...)">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                    <span>Thông Số AI</span>
+                                    <span id="direct-params-indicator" class="params-active-badge">0.7 / 8K</span>
+                                </button>
                                 <button id="new-direct-chat-btn" class="btn btn-outline btn-xs" title="Bắt đầu hội thoại mới">
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                     <span>Đoạn Chat Mới</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- BẢNG TÙY CHỈNH THÔNG SỐ AI (COLLAPSIBLE PARAMETERS DRAWER) -->
+                        <div id="direct-params-drawer" class="chat-params-drawer" style="display: none;">
+                            <div class="params-drawer-header">
+                                <div class="params-drawer-title">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                    <span>Tùy Chỉnh Thông Số Siêu Vi (Ollama LLM Parameters)</span>
+                                </div>
+                                <div class="params-presets-row">
+                                    <span class="preset-label">Mẫu sẵn:</span>
+                                    <button type="button" class="param-preset-pill active" data-preset="default" title="Đàm thoại cân bằng, tự nhiên">⚖️ Cân Bằng</button>
+                                    <button type="button" class="param-preset-pill" data-preset="coding" title="Chính xác cao, lập trình, giải toán logic">🎯 Lập Trình & Logic</button>
+                                    <button type="button" class="param-preset-pill" data-preset="creative" title="Sáng tạo, phong phú từ ngữ, viết văn thơ">🎨 Sáng Tạo</button>
+                                    <button type="button" class="param-preset-pill" data-preset="deep" title="Đọc hiểu tài liệu dài, cửa sổ ngữ cảnh lớn">📚 Đọc Sâu</button>
+                                </div>
+                            </div>
+
+                            <div class="params-drawer-grid">
+                                <!-- Temperature -->
+                                <div class="param-field-item">
+                                    <div class="param-field-head">
+                                        <label for="direct-param-temp">Nhiệt độ (Temperature)</label>
+                                        <span id="direct-param-temp-val" class="param-val-pill">0.70</span>
+                                    </div>
+                                    <input type="range" id="direct-param-temp" min="0.0" max="2.0" step="0.05" value="0.70" class="param-range-slider">
+                                    <div class="param-field-hints">
+                                        <span>0.0 (Chính xác)</span>
+                                        <span>0.7 (Chuẩn)</span>
+                                        <span>2.0 (Phá cách)</span>
+                                    </div>
+                                </div>
+
+                                <!-- Context Length -->
+                                <div class="param-field-item">
+                                    <div class="param-field-head">
+                                        <label for="direct-param-ctx">Độ dài ngữ cảnh (num_ctx)</label>
+                                        <span id="direct-param-ctx-val" class="param-val-pill">8,192 tokens</span>
+                                    </div>
+                                    <select id="direct-param-ctx" class="custom-select param-select-control">
+                                        <option value="2048">2,048 tokens (2K - Siêu nhẹ, tốc độ cao)</option>
+                                        <option value="4096">4,096 tokens (4K - Tiêu chuẩn hội thoại)</option>
+                                        <option value="8192" selected>8,192 tokens (8K - Mặc định khuyến nghị)</option>
+                                        <option value="16384">16,384 tokens (16K - Đọc tài liệu dài)</option>
+                                        <option value="32768">32,768 tokens (32K - Khối lượng lớn)</option>
+                                    </select>
+                                    <div class="param-field-hints">
+                                        <span>Kích thước bộ nhớ ngữ cảnh trò chuyện & RAG</span>
+                                    </div>
+                                </div>
+
+                                <!-- Top-P -->
+                                <div class="param-field-item">
+                                    <div class="param-field-head">
+                                        <label for="direct-param-topp">Top-P (Nucleus Sampling)</label>
+                                        <span id="direct-param-topp-val" class="param-val-pill">0.90</span>
+                                    </div>
+                                    <input type="range" id="direct-param-topp" min="0.1" max="1.0" step="0.05" value="0.90" class="param-range-slider">
+                                    <div class="param-field-hints">
+                                        <span>Lọc tập từ ngữ theo phân phối xác suất tích lũy</span>
+                                    </div>
+                                </div>
+
+                                <!-- Repeat Penalty -->
+                                <div class="param-field-item">
+                                    <div class="param-field-head">
+                                        <label for="direct-param-rep">Phạt lặp từ (Repeat Penalty)</label>
+                                        <span id="direct-param-rep-val" class="param-val-pill">1.10</span>
+                                    </div>
+                                    <input type="range" id="direct-param-rep" min="1.0" max="2.0" step="0.05" value="1.10" class="param-range-slider">
+                                    <div class="param-field-hints">
+                                        <span>Ngăn chặn AI lặp lại cụm từ khi trả lời dài</span>
+                                    </div>
+                                </div>
+
+                                <!-- Max Tokens (num_predict) -->
+                                <div class="param-field-item">
+                                    <div class="param-field-head">
+                                        <label for="direct-param-max-tokens">Số token sinh tối đa (num_predict)</label>
+                                        <span id="direct-param-max-tokens-val" class="param-val-pill">2,048</span>
+                                    </div>
+                                    <select id="direct-param-max-tokens" class="custom-select param-select-control">
+                                        <option value="512">512 tokens (~350 từ ngắn gọn)</option>
+                                        <option value="1024">1,024 tokens (~750 từ)</option>
+                                        <option value="2048" selected>2,048 tokens (~1,500 từ chuẩn)</option>
+                                        <option value="4096">4,096 tokens (~3,000 từ chuyên sâu)</option>
+                                        <option value="-1">Không giới hạn (-1 max output)</option>
+                                    </select>
+                                    <div class="param-field-hints">
+                                        <span>Giới hạn độ dài tối đa cho mỗi phản hồi của AI</span>
+                                    </div>
+                                </div>
+
+                                <!-- System Prompt -->
+                                <div class="param-field-item param-field-full">
+                                    <div class="param-field-head">
+                                        <label for="direct-param-system-prompt">Chỉ dẫn hệ thống (System Prompt)</label>
+                                        <span class="param-hint-tag">Tùy chọn</span>
+                                    </div>
+                                    <textarea id="direct-param-system-prompt" class="param-textarea-control" rows="2" placeholder="Ví dụ: Bạn là một lập trình viên Python kỳ cựu. Luôn ưu tiên đưa ra code ngắn gọn, có chú thích rõ ràng và tối ưu thời gian chạy..."></textarea>
+                                </div>
+                            </div>
+
+                            <div class="params-drawer-footer">
+                                <button type="button" id="direct-params-reset-btn" class="btn btn-outline btn-xs" title="Khôi phục toàn bộ thông số về cấu hình mặc định ban đầu">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                                    <span>Khôi Phục Mặc Định</span>
+                                </button>
+                                <button type="button" id="direct-params-close-btn" class="btn btn-primary btn-xs">
+                                    <span>Áp Dụng & Đóng</span>
                                 </button>
                             </div>
                         </div>
@@ -303,7 +420,7 @@
                                 </div>
                                 <div class="message-content">
                                     <div class="message-sender-title">
-                                        <span class="sender-name">HPU2 AI Assistant</span>
+                                        <span class="sender-name">AI Playground</span>
                                         <span class="sender-badge rag">📚 Chế Độ RAG</span>
                                     </div>
                                     <div class="content">
@@ -350,6 +467,124 @@
                                         <input type="radio" name="rag-mode" value="hybrid">
                                         <span>🔍 Hybrid Search</span>
                                     </label>
+                                </div>
+
+                                <button id="rag-toggle-params-btn" type="button" class="btn btn-outline btn-xs dock-params-btn" title="Tùy chỉnh thông số AI (Temperature, Context Length, Top-P...)">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                    <span>Thông Số AI</span>
+                                    <span id="rag-params-indicator" class="params-active-badge">0.7 / 8K</span>
+                                </button>
+                            </div>
+
+                            <!-- BẢNG TÙY CHỈNH THÔNG SỐ AI (RAG CHAT) -->
+                            <div id="rag-params-drawer" class="chat-params-drawer" style="display: none;">
+                                <div class="params-drawer-header">
+                                    <div class="params-drawer-title">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                        <span>Tùy Chỉnh Thông Số Siêu Vi (Ollama LLM Parameters)</span>
+                                    </div>
+                                    <div class="params-presets-row">
+                                        <span class="preset-label">Mẫu sẵn:</span>
+                                        <button type="button" class="param-preset-pill active" data-preset="default" title="Đàm thoại cân bằng, tự nhiên">⚖️ Cân Bằng</button>
+                                        <button type="button" class="param-preset-pill" data-preset="coding" title="Chính xác cao, lập trình, giải toán logic">🎯 Lập Trình & Logic</button>
+                                        <button type="button" class="param-preset-pill" data-preset="creative" title="Sáng tạo, phong phú từ ngữ, viết văn thơ">🎨 Sáng Tạo</button>
+                                        <button type="button" class="param-preset-pill" data-preset="deep" title="Đọc hiểu tài liệu dài, cửa sổ ngữ cảnh lớn">📚 Đọc Sâu</button>
+                                    </div>
+                                </div>
+
+                                <div class="params-drawer-grid">
+                                    <!-- Temperature -->
+                                    <div class="param-field-item">
+                                        <div class="param-field-head">
+                                            <label for="rag-param-temp">Nhiệt độ (Temperature)</label>
+                                            <span id="rag-param-temp-val" class="param-val-pill">0.70</span>
+                                        </div>
+                                        <input type="range" id="rag-param-temp" min="0.0" max="2.0" step="0.05" value="0.70" class="param-range-slider">
+                                        <div class="param-field-hints">
+                                            <span>0.0 (Chính xác)</span>
+                                            <span>0.7 (Chuẩn)</span>
+                                            <span>2.0 (Phá cách)</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Context Length -->
+                                    <div class="param-field-item">
+                                        <div class="param-field-head">
+                                            <label for="rag-param-ctx">Độ dài ngữ cảnh (num_ctx)</label>
+                                            <span id="rag-param-ctx-val" class="param-val-pill">8,192 tokens</span>
+                                        </div>
+                                        <select id="rag-param-ctx" class="custom-select param-select-control">
+                                            <option value="2048">2,048 tokens (2K - Siêu nhẹ, tốc độ cao)</option>
+                                            <option value="4096">4,096 tokens (4K - Tiêu chuẩn hội thoại)</option>
+                                            <option value="8192" selected>8,192 tokens (8K - Mặc định khuyến nghị)</option>
+                                            <option value="16384">16,384 tokens (16K - Đọc tài liệu dài)</option>
+                                            <option value="32768">32,768 tokens (32K - Khối lượng lớn)</option>
+                                        </select>
+                                        <div class="param-field-hints">
+                                            <span>Kích thước bộ nhớ ngữ cảnh trò chuyện & RAG</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Top-P -->
+                                    <div class="param-field-item">
+                                        <div class="param-field-head">
+                                            <label for="rag-param-topp">Top-P (Nucleus Sampling)</label>
+                                            <span id="rag-param-topp-val" class="param-val-pill">0.90</span>
+                                        </div>
+                                        <input type="range" id="rag-param-topp" min="0.1" max="1.0" step="0.05" value="0.90" class="param-range-slider">
+                                        <div class="param-field-hints">
+                                            <span>Lọc tập từ ngữ theo phân phối xác suất tích lũy</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Repeat Penalty -->
+                                    <div class="param-field-item">
+                                        <div class="param-field-head">
+                                            <label for="rag-param-rep">Phạt lặp từ (Repeat Penalty)</label>
+                                            <span id="rag-param-rep-val" class="param-val-pill">1.10</span>
+                                        </div>
+                                        <input type="range" id="rag-param-rep" min="1.0" max="2.0" step="0.05" value="1.10" class="param-range-slider">
+                                        <div class="param-field-hints">
+                                            <span>Ngăn chặn AI lặp lại cụm từ khi trả lời dài</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Max Tokens (num_predict) -->
+                                    <div class="param-field-item">
+                                        <div class="param-field-head">
+                                            <label for="rag-param-max-tokens">Số token sinh tối đa (num_predict)</label>
+                                            <span id="rag-param-max-tokens-val" class="param-val-pill">2,048</span>
+                                        </div>
+                                        <select id="rag-param-max-tokens" class="custom-select param-select-control">
+                                            <option value="512">512 tokens (~350 từ ngắn gọn)</option>
+                                            <option value="1024">1,024 tokens (~750 từ)</option>
+                                            <option value="2048" selected>2,048 tokens (~1,500 từ chuẩn)</option>
+                                            <option value="4096">4,096 tokens (~3,000 từ chuyên sâu)</option>
+                                            <option value="-1">Không giới hạn (-1 max output)</option>
+                                        </select>
+                                        <div class="param-field-hints">
+                                            <span>Giới hạn độ dài tối đa cho mỗi phản hồi của AI</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- System Prompt -->
+                                    <div class="param-field-item param-field-full">
+                                        <div class="param-field-head">
+                                            <label for="rag-param-system-prompt">Chỉ dẫn hệ thống (System Prompt)</label>
+                                            <span class="param-hint-tag">Tùy chọn</span>
+                                        </div>
+                                        <textarea id="rag-param-system-prompt" class="param-textarea-control" rows="2" placeholder="Ví dụ: Bạn là một chuyên gia phân tích tài liệu học thuật. Luôn trích dẫn rõ nguồn và so sánh các ý kiến..."></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="params-drawer-footer">
+                                    <button type="button" id="rag-params-reset-btn" class="btn btn-outline btn-xs" title="Khôi phục toàn bộ thông số về cấu hình mặc định ban đầu">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                                        <span>Khôi Phục Mặc Định</span>
+                                    </button>
+                                    <button type="button" id="rag-params-close-btn" class="btn btn-primary btn-xs">
+                                        <span>Áp Dụng & Đóng</span>
+                                    </button>
                                 </div>
                             </div>
 
@@ -2059,7 +2294,7 @@
     <script src="js/libs/jszip.min.js?v=2.6.0"></script>
     <script src="js/libs/docx-preview.js?v=2.6.0"></script>
     <script src="js/libs/xlsx.full.min.js?v=2.6.0"></script>
-    <script src="js/config.js?v=2.8.5"></script>
-    <script src="js/app.js?v=2.8.5"></script>
+    <script src="js/config.js?v=3.1.0"></script>
+    <script src="js/app.js?v=3.1.0"></script>
 </body>
 </html>

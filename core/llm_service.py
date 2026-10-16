@@ -84,11 +84,14 @@ class LLMService:
         model_id: str = "qwen2.5:14b",
         images: Optional[List[str]] = None,
         model: Optional[str] = None,
+        options: Optional[Dict[str, Any]] = None,
+        system_prompt: Optional[str] = None,
         **kwargs
     ) -> Generator[str, None, None]:
         """
         Stream câu trả lời thuần từ mô hình Ollama.
         Nếu có ảnh đính kèm mà người dùng chọn model không hỗ trợ vision, tự động dùng model vision của Ollama (qwen2.5vl:7b).
+        Hỗ trợ các siêu tham số tùy chỉnh: temperature, num_ctx, top_p, top_k, repeat_penalty, num_predict...
         """
         if model:
             model_id = model
@@ -103,19 +106,36 @@ class LLMService:
             if not is_vision_model:
                 model_id = "qwen2.5vl:7b"
 
-        yield from self._stream_ollama(messages, model_id, images)
+        yield from self._stream_ollama(
+            messages,
+            model_id,
+            images,
+            options=options,
+            system_prompt=system_prompt
+        )
 
     def _stream_ollama(
         self,
         messages: List[Dict[str, str]],
         model_id: str,
-        images: Optional[List[Any]] = None
+        images: Optional[List[Any]] = None,
+        options: Optional[Dict[str, Any]] = None,
+        system_prompt: Optional[str] = None
     ) -> Generator[str, None, None]:
         active_url = self.check_ollama_alive()
         api_chat_url = f"{active_url}/api/chat"
 
         # Định dạng payload gửi tới Ollama
         formatted_messages = []
+
+        # Thêm system_prompt nếu có và chưa có trong messages
+        has_system = any(msg.get("role") == "system" for msg in messages)
+        if system_prompt and isinstance(system_prompt, str) and system_prompt.strip() and not has_system:
+            formatted_messages.append({
+                "role": "system",
+                "content": system_prompt.strip()
+            })
+
         for msg in messages:
             formatted_messages.append({
                 "role": msg.get("role", "user"),
@@ -127,6 +147,24 @@ class LLMService:
             "messages": formatted_messages,
             "stream": True
         }
+
+        # Gắn options nếu người dùng tùy chỉnh thông số AI
+        if options and isinstance(options, dict):
+            clean_opts: Dict[str, Any] = {}
+            for k, v in options.items():
+                if v is not None:
+                    if k in ("temperature", "top_p", "repeat_penalty", "presence_penalty", "frequency_penalty", "min_p"):
+                        try:
+                            clean_opts[k] = float(v)
+                        except (ValueError, TypeError):
+                            pass
+                    elif k in ("num_ctx", "top_k", "num_predict", "repeat_last_n", "seed"):
+                        try:
+                            clean_opts[k] = int(v)
+                        except (ValueError, TypeError):
+                            pass
+            if clean_opts:
+                payload["options"] = clean_opts
 
         # Nếu có hình ảnh đính kèm (multimodal)
         if images and len(formatted_messages) > 0:
