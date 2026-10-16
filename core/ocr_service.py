@@ -704,7 +704,10 @@ class OCRService:
         # 6. Tạo Chunks cho RAG
         final_rag_text = corrected_text if (use_ollama and corrected_text) else total_extracted_text
         try:
-            from langchain.text_splitter import RecursiveCharacterTextSplitter
+            try:
+                from langchain_text_splitters import RecursiveCharacterTextSplitter
+            except ImportError:
+                from langchain.text_splitter import RecursiveCharacterTextSplitter
             splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=150)
             chunks = [c.page_content for c in splitter.create_documents([final_rag_text])]
         except Exception:

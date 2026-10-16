@@ -42,6 +42,351 @@ document.addEventListener("DOMContentLoaded", () => {
     let allAvailableCollections = [];
     let tableSelectedDocIds = new Set();
 
+    // =========================================================================
+    // AI PLAYGROUND: LLM PARAMETERS MANAGEMENT (DRAWER & PRESETS)
+    // =========================================================================
+    const DEFAULT_CHAT_PARAMS = {
+        temperature: 0.70,
+        num_ctx: 8192,
+        top_p: 0.90,
+        repeat_penalty: 1.10,
+        num_predict: 2048,
+        system_prompt: ""
+    };
+
+    const CHAT_PRESETS = {
+        default: {
+            temperature: 0.70,
+            num_ctx: 8192,
+            top_p: 0.90,
+            repeat_penalty: 1.10,
+            num_predict: 2048
+        },
+        coding: {
+            temperature: 0.15,
+            num_ctx: 8192,
+            top_p: 0.80,
+            repeat_penalty: 1.05,
+            num_predict: 4096
+        },
+        creative: {
+            temperature: 1.25,
+            num_ctx: 8192,
+            top_p: 0.95,
+            repeat_penalty: 1.15,
+            num_predict: 2048
+        },
+        deep: {
+            temperature: 0.30,
+            num_ctx: 16384,
+            top_p: 0.85,
+            repeat_penalty: 1.10,
+            num_predict: 4096
+        }
+    };
+
+    let activeChatParams = { ...DEFAULT_CHAT_PARAMS };
+
+    function loadSavedChatParams() {
+        try {
+            const raw = localStorage.getItem("AI_PLAYGROUND_PARAMS");
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                activeChatParams = { ...DEFAULT_CHAT_PARAMS, ...parsed };
+            }
+        } catch (_) {}
+    }
+
+    function saveChatParams() {
+        try {
+            localStorage.setItem("AI_PLAYGROUND_PARAMS", JSON.stringify(activeChatParams));
+        } catch (_) {}
+    }
+
+    function updateChatParamsBadges() {
+        const tempStr = parseFloat(activeChatParams.temperature || 0.7).toFixed(2);
+        const ctxK = Math.round(parseInt(activeChatParams.num_ctx || 8192) / 1024) + "K";
+        const badgeText = `${tempStr} / ${ctxK}`;
+
+        const directIndicator = document.getElementById("direct-params-indicator");
+        if (directIndicator) directIndicator.textContent = badgeText;
+
+        const ragIndicator = document.getElementById("rag-params-indicator");
+        if (ragIndicator) ragIndicator.textContent = badgeText;
+    }
+
+    function syncChatParamsUI() {
+        // Direct drawer elements
+        const dTempSlider = document.getElementById("direct-param-temp");
+        const dTempVal = document.getElementById("direct-param-temp-val");
+        if (dTempSlider) dTempSlider.value = activeChatParams.temperature;
+        if (dTempVal) dTempVal.textContent = parseFloat(activeChatParams.temperature || 0.7).toFixed(2);
+
+        const dCtxSelect = document.getElementById("direct-param-ctx");
+        const dCtxVal = document.getElementById("direct-param-ctx-val");
+        if (dCtxSelect) dCtxSelect.value = activeChatParams.num_ctx;
+        if (dCtxVal) dCtxVal.textContent = Number(activeChatParams.num_ctx || 8192).toLocaleString() + " tokens";
+
+        const dToppSlider = document.getElementById("direct-param-topp");
+        const dToppVal = document.getElementById("direct-param-topp-val");
+        if (dToppSlider) dToppSlider.value = activeChatParams.top_p;
+        if (dToppVal) dToppVal.textContent = parseFloat(activeChatParams.top_p || 0.9).toFixed(2);
+
+        const dRepSlider = document.getElementById("direct-param-rep");
+        const dRepVal = document.getElementById("direct-param-rep-val");
+        if (dRepSlider) dRepSlider.value = activeChatParams.repeat_penalty;
+        if (dRepVal) dRepVal.textContent = parseFloat(activeChatParams.repeat_penalty || 1.1).toFixed(2);
+
+        const dMaxSelect = document.getElementById("direct-param-max-tokens");
+        const dMaxVal = document.getElementById("direct-param-max-tokens-val");
+        if (dMaxSelect) dMaxSelect.value = activeChatParams.num_predict;
+        if (dMaxVal) dMaxVal.textContent = activeChatParams.num_predict === -1 ? "Không giới hạn" : Number(activeChatParams.num_predict || 2048).toLocaleString();
+
+        const dSysPrompt = document.getElementById("direct-param-system-prompt");
+        if (dSysPrompt) dSysPrompt.value = activeChatParams.system_prompt || "";
+
+        // RAG drawer elements
+        const rTempSlider = document.getElementById("rag-param-temp");
+        const rTempVal = document.getElementById("rag-param-temp-val");
+        if (rTempSlider) rTempSlider.value = activeChatParams.temperature;
+        if (rTempVal) rTempVal.textContent = parseFloat(activeChatParams.temperature || 0.7).toFixed(2);
+
+        const rCtxSelect = document.getElementById("rag-param-ctx");
+        const rCtxVal = document.getElementById("rag-param-ctx-val");
+        if (rCtxSelect) rCtxSelect.value = activeChatParams.num_ctx;
+        if (rCtxVal) rCtxVal.textContent = Number(activeChatParams.num_ctx || 8192).toLocaleString() + " tokens";
+
+        const rToppSlider = document.getElementById("rag-param-topp");
+        const rToppVal = document.getElementById("rag-param-topp-val");
+        if (rToppSlider) rToppSlider.value = activeChatParams.top_p;
+        if (rToppVal) rToppVal.textContent = parseFloat(activeChatParams.top_p || 0.9).toFixed(2);
+
+        const rRepSlider = document.getElementById("rag-param-rep");
+        const rRepVal = document.getElementById("rag-param-rep-val");
+        if (rRepSlider) rRepSlider.value = activeChatParams.repeat_penalty;
+        if (rRepVal) rRepVal.textContent = parseFloat(activeChatParams.repeat_penalty || 1.1).toFixed(2);
+
+        const rMaxSelect = document.getElementById("rag-param-max-tokens");
+        const rMaxVal = document.getElementById("rag-param-max-tokens-val");
+        if (rMaxSelect) rMaxSelect.value = activeChatParams.num_predict;
+        if (rMaxVal) rMaxVal.textContent = activeChatParams.num_predict === -1 ? "Không giới hạn" : Number(activeChatParams.num_predict || 2048).toLocaleString();
+
+        const rSysPrompt = document.getElementById("rag-param-system-prompt");
+        if (rSysPrompt) rSysPrompt.value = activeChatParams.system_prompt || "";
+
+        updateChatParamsBadges();
+    }
+
+    function applyChatPreset(presetName) {
+        const preset = CHAT_PRESETS[presetName];
+        if (!preset) return;
+        activeChatParams = {
+            ...activeChatParams,
+            ...preset
+        };
+        saveChatParams();
+        syncChatParamsUI();
+
+        // Update active class on preset pills in both drawers
+        document.querySelectorAll(".param-preset-pill").forEach(pill => {
+            if (pill.getAttribute("data-preset") === presetName) {
+                pill.classList.add("active");
+            } else {
+                pill.classList.remove("active");
+            }
+        });
+    }
+
+    function toggleChatParamsDrawer(type = 'direct') {
+        const isRag = type === 'rag';
+        const drawerId = isRag ? 'rag-params-drawer' : 'direct-params-drawer';
+        const btnId = isRag ? 'rag-toggle-params-btn' : 'direct-toggle-params-btn';
+        const otherDrawerId = isRag ? 'direct-params-drawer' : 'rag-params-drawer';
+        const otherBtnId = isRag ? 'direct-toggle-params-btn' : 'rag-toggle-params-btn';
+
+        const drawer = document.getElementById(drawerId);
+        const btn = document.getElementById(btnId);
+        if (!drawer) {
+            console.warn("[ChatParams] Drawer not found:", drawerId);
+            return;
+        }
+
+        // Đóng ngăn kéo còn lại nếu đang mở
+        const otherDrawer = document.getElementById(otherDrawerId);
+        const otherBtn = document.getElementById(otherBtnId);
+        if (otherDrawer && (otherDrawer.classList.contains('is-open') || otherDrawer.style.display === 'block')) {
+            otherDrawer.classList.remove('is-open');
+            otherDrawer.style.display = 'none';
+            if (otherBtn) otherBtn.classList.remove('active');
+        }
+
+        const isCurrentlyOpen = drawer.classList.contains('is-open') || (drawer.style.display && drawer.style.display !== 'none');
+
+        if (isCurrentlyOpen) {
+            drawer.classList.remove('is-open');
+            drawer.style.display = 'none';
+            if (btn) btn.classList.remove('active');
+        } else {
+            drawer.classList.add('is-open');
+            drawer.style.display = 'block';
+            if (btn) btn.classList.add('active');
+            syncChatParamsUI();
+            try {
+                drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } catch (_) {}
+        }
+    }
+
+    function resetChatParams() {
+        activeChatParams = { ...DEFAULT_CHAT_PARAMS };
+        saveChatParams();
+        syncChatParamsUI();
+        applyChatPreset("default");
+    }
+
+    // Expose globally for inline onclick handlers and accessibility across modules
+    window.toggleChatParamsDrawer = toggleChatParamsDrawer;
+    window.applyChatPreset = applyChatPreset;
+    window.resetChatParams = resetChatParams;
+    window.syncChatParamsUI = syncChatParamsUI;
+    window.getActiveChatOptions = getActiveChatOptions;
+    window.getActiveSystemPrompt = getActiveSystemPrompt;
+
+    function initChatParameters() {
+        loadSavedChatParams();
+        syncChatParamsUI();
+
+        // Bind toggle buttons (Fail-safe inline + event listener)
+        const directToggleBtn = document.getElementById("direct-toggle-params-btn");
+        if (directToggleBtn) {
+            directToggleBtn.onclick = (e) => {
+                e.preventDefault();
+                toggleChatParamsDrawer('direct');
+            };
+        }
+
+        const ragToggleBtn = document.getElementById("rag-toggle-params-btn");
+        if (ragToggleBtn) {
+            ragToggleBtn.onclick = (e) => {
+                e.preventDefault();
+                toggleChatParamsDrawer('rag');
+            };
+        }
+
+        // Close buttons
+        const directCloseBtn = document.getElementById("direct-params-close-btn");
+        if (directCloseBtn) {
+            directCloseBtn.onclick = (e) => {
+                e.preventDefault();
+                toggleChatParamsDrawer('direct');
+            };
+        }
+
+        const ragCloseBtn = document.getElementById("rag-params-close-btn");
+        if (ragCloseBtn) {
+            ragCloseBtn.onclick = (e) => {
+                e.preventDefault();
+                toggleChatParamsDrawer('rag');
+            };
+        }
+
+        // Reset buttons
+        const directResetBtn = document.getElementById("direct-params-reset-btn");
+        if (directResetBtn) {
+            directResetBtn.onclick = (e) => {
+                e.preventDefault();
+                resetChatParams();
+            };
+        }
+        const ragResetBtn = document.getElementById("rag-params-reset-btn");
+        if (ragResetBtn) {
+            ragResetBtn.onclick = (e) => {
+                e.preventDefault();
+                resetChatParams();
+            };
+        }
+
+        // Preset pill clicks
+        document.querySelectorAll(".param-preset-pill").forEach(pill => {
+            pill.onclick = (e) => {
+                e.preventDefault();
+                const preset = pill.getAttribute("data-preset");
+                applyChatPreset(preset);
+            };
+        });
+
+        // Sliders binding
+        const bindSlider = (sliderId, valId, key, isFloat) => {
+            const el = document.getElementById(sliderId);
+            const valEl = document.getElementById(valId);
+            if (el) {
+                el.addEventListener("input", () => {
+                    const parsedVal = isFloat ? parseFloat(el.value) : parseInt(el.value);
+                    activeChatParams[key] = parsedVal;
+                    if (valEl) valEl.textContent = isFloat ? parsedVal.toFixed(2) : parsedVal;
+                    saveChatParams();
+                    updateChatParamsBadges();
+                });
+            }
+        };
+
+        bindSlider("direct-param-temp", "direct-param-temp-val", "temperature", true);
+        bindSlider("rag-param-temp", "rag-param-temp-val", "temperature", true);
+
+        bindSlider("direct-param-topp", "direct-param-topp-val", "top_p", true);
+        bindSlider("rag-param-topp", "rag-param-topp-val", "top_p", true);
+
+        bindSlider("direct-param-rep", "direct-param-rep-val", "repeat_penalty", true);
+        bindSlider("rag-param-rep", "rag-param-rep-val", "repeat_penalty", true);
+
+        const bindSelect = (selectId, valId, key, isInt, suffix = "") => {
+            const el = document.getElementById(selectId);
+            const valEl = document.getElementById(valId);
+            if (el) {
+                el.addEventListener("change", () => {
+                    const parsedVal = isInt ? parseInt(el.value) : el.value;
+                    activeChatParams[key] = parsedVal;
+                    if (valEl) valEl.textContent = isInt ? (parsedVal === -1 ? "Không giới hạn" : Number(parsedVal).toLocaleString() + suffix) : parsedVal;
+                    saveChatParams();
+                    updateChatParamsBadges();
+                });
+            }
+        };
+
+        bindSelect("direct-param-ctx", "direct-param-ctx-val", "num_ctx", true, " tokens");
+        bindSelect("rag-param-ctx", "rag-param-ctx-val", "num_ctx", true, " tokens");
+
+        bindSelect("direct-param-max-tokens", "direct-param-max-tokens-val", "num_predict", true);
+        bindSelect("rag-param-max-tokens", "rag-param-max-tokens-val", "num_predict", true);
+
+        const bindText = (textareaId, key) => {
+            const el = document.getElementById(textareaId);
+            if (el) {
+                el.addEventListener("input", () => {
+                    activeChatParams[key] = el.value.trim();
+                    saveChatParams();
+                });
+            }
+        };
+        bindText("direct-param-system-prompt", "system_prompt");
+        bindText("rag-param-system-prompt", "system_prompt");
+    }
+
+    function getActiveChatOptions() {
+        return {
+            temperature: parseFloat(activeChatParams.temperature !== undefined ? activeChatParams.temperature : 0.70),
+            num_ctx: parseInt(activeChatParams.num_ctx || 8192),
+            top_p: parseFloat(activeChatParams.top_p !== undefined ? activeChatParams.top_p : 0.90),
+            repeat_penalty: parseFloat(activeChatParams.repeat_penalty !== undefined ? activeChatParams.repeat_penalty : 1.10),
+            num_predict: parseInt(activeChatParams.num_predict !== undefined ? activeChatParams.num_predict : 2048)
+        };
+    }
+
+    function getActiveSystemPrompt() {
+        return (activeChatParams.system_prompt || "").trim();
+    }
+
+
     // ---------------------- DOM ELEMENTS ----------------------
     // Navigation & Theme
     const tabBtns = document.querySelectorAll(".tab-btn");
@@ -422,6 +767,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Chạy khởi tạo theme ngay
     initTheme();
+    initChatParameters();
 
     // ---------------------- TABS NAVIGATION ----------------------
     const navTabsContainer = document.querySelector(".nav-tabs");
@@ -462,7 +808,340 @@ document.addEventListener("DOMContentLoaded", () => {
                 loadOfficeFilesList();
             }
             if (targetId === "tab-roleplay") {
-                initRoleplay();
+            
+    // =========================================================================
+    // AI PLAYGROUND: STABLE DIFFUSION 1.5 IMAGE STUDIO LOGIC
+    // =========================================================================
+    let currentSdStyle = "none";
+    let currentSdWidth = 512;
+    let currentSdHeight = 512;
+    let lastGeneratedSeed = null;
+
+    const SAMPLE_SD_PROMPTS = [
+        "Một chú phi hành gia mèo đáng yêu đang lơ lửng ngắm Trái Đất trong không gian vũ trụ, ánh sao lấp lánh, phong cách anime rực rỡ, 8k",
+        "A futuristic cyberpunk Vietnamese street food stall at night, glowing neon signs, rain reflections on asphalt, highly detailed, cinematic lighting",
+        "Lâu đài cổ tích trên mây bồng bềnh, thác nước đổ xuống không trung, cầu vồng rực rỡ phong cách anime Makoto Shinkai, studio ghibli",
+        "Chân dung một cô gái Việt Nam mặc áo dài trắng truyền thống đứng bên hồ sen mùa hạ, ánh nắng dịu dàng, ảnh chụp chân dung dslr 8k",
+        "A majestic dragon perched on a mountain peak, storm clouds, lightning, dramatic cinematic lighting, 8k concept art, Artstation trending",
+        "Robot cổ điển phong cách steampunk bằng đồng thau đang đọc sách trong thư viện cổ ngập tràn ánh nắng vàng ấm áp",
+        "Thành phố dưới đáy đại dương rực rỡ san hô phát sáng, cá voi khổng lồ bơi qua các tháp kính pha lê, phong cách digital 3d Unreal Engine",
+        "Một tách cà phê nóng tỏa khói bốc lên hình trái tim trên bàn gỗ bên cửa sổ ngắm mưa rơi, không khí ấm cúng, ảnh chụp macro dslr"
+    ];
+
+    function initImageStudio() {
+        const sdModelSelect = document.getElementById("sd-model-select");
+        const sdPromptInput = document.getElementById("sd-prompt-input");
+        const sdEnhanceCheck = document.getElementById("sd-enhance-prompt-check");
+        const sdStylePills = document.querySelectorAll(".sd-style-pill");
+        const sdRatioBtns = document.querySelectorAll(".sd-ratio-btn");
+        const sdToggleAdvancedBtn = document.getElementById("sd-toggle-advanced-btn");
+        const sdAdvancedPanel = document.getElementById("sd-advanced-panel");
+        const sdNegPromptInput = document.getElementById("sd-neg-prompt");
+        const sdStepsSlider = document.getElementById("sd-steps-slider");
+        const sdStepsVal = document.getElementById("sd-steps-val");
+        const sdCfgSlider = document.getElementById("sd-cfg-slider");
+        const sdCfgVal = document.getElementById("sd-cfg-val");
+        const sdSeedInput = document.getElementById("sd-seed-input");
+        const sdGenerateBtn = document.getElementById("sd-generate-btn");
+        const sdSampleBtn = document.getElementById("sd-btn-sample-prompt");
+        const sdEmptyState = document.getElementById("sd-empty-state");
+        const sdLoadingState = document.getElementById("sd-loading-state");
+        const sdResultState = document.getElementById("sd-result-state");
+        const sdResultImg = document.getElementById("sd-result-img");
+        const sdDownloadBtn = document.getElementById("sd-download-btn");
+        const sdReuseSeedBtn = document.getElementById("sd-reuse-seed-btn");
+        const sdMetaTime = document.getElementById("sd-meta-time");
+        const sdMetaSize = document.getElementById("sd-meta-size");
+        const sdMetaSeed = document.getElementById("sd-meta-seed");
+        const sdPromptUsedBox = document.getElementById("sd-prompt-used-box");
+        const sdPromptUsedText = document.getElementById("sd-prompt-used-text");
+        const sdStyleBadge = document.getElementById("sd-style-badge");
+        const sdHistoryGrid = document.getElementById("sd-history-grid");
+        const sdHistoryCount = document.getElementById("sd-history-count");
+        const sdRefreshHistoryBtn = document.getElementById("sd-refresh-history-btn");
+        const sdGpuBadge = document.getElementById("sd-gpu-badge");
+
+        // 1. Style Pills Handler
+        sdStylePills.forEach(pill => {
+            pill.addEventListener("click", () => {
+                sdStylePills.forEach(p => p.classList.remove("active"));
+                pill.classList.add("active");
+                currentSdStyle = pill.getAttribute("data-style") || "none";
+            });
+        });
+
+        // 2. Aspect Ratio Buttons Handler
+        sdRatioBtns.forEach(btn => {
+            btn.addEventListener("click", () => {
+                sdRatioBtns.forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                currentSdWidth = parseInt(btn.getAttribute("data-width") || 512);
+                currentSdHeight = parseInt(btn.getAttribute("data-height") || 512);
+            });
+        });
+
+        // 3. Toggle Advanced Panel
+        if (sdToggleAdvancedBtn && sdAdvancedPanel) {
+            sdToggleAdvancedBtn.addEventListener("click", () => {
+                const isHidden = sdAdvancedPanel.style.display === "none";
+                sdAdvancedPanel.style.display = isHidden ? "block" : "none";
+                const svg = sdToggleAdvancedBtn.querySelector("svg");
+                if (svg) svg.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
+            });
+        }
+
+        // 4. Sliders live update
+        if (sdStepsSlider && sdStepsVal) {
+            sdStepsSlider.addEventListener("input", () => {
+                sdStepsVal.textContent = sdStepsSlider.value;
+            });
+        }
+        if (sdCfgSlider && sdCfgVal) {
+            sdCfgSlider.addEventListener("input", () => {
+                sdCfgVal.textContent = parseFloat(sdCfgSlider.value).toFixed(1);
+            });
+        }
+
+        // 5. Random Sample Prompt
+        if (sdSampleBtn && sdPromptInput) {
+            sdSampleBtn.addEventListener("click", () => {
+                const randomPrompt = SAMPLE_SD_PROMPTS[Math.floor(Math.random() * SAMPLE_SD_PROMPTS.length)];
+                sdPromptInput.value = randomPrompt;
+                sdPromptInput.focus();
+            });
+        }
+
+        // 6. Reuse Seed
+        if (sdReuseSeedBtn && sdSeedInput) {
+            sdReuseSeedBtn.addEventListener("click", () => {
+                if (lastGeneratedSeed !== null && lastGeneratedSeed !== undefined) {
+                    sdSeedInput.value = lastGeneratedSeed;
+                    if (sdAdvancedPanel && sdAdvancedPanel.style.display === "none") {
+                        sdAdvancedPanel.style.display = "block";
+                    }
+                    sdSeedInput.focus();
+                    alert(`Đã gán Seed: ${lastGeneratedSeed} vào ô cài đặt nâng cao!`);
+                }
+            });
+        }
+
+        // 7. Load GPU & Model Status
+        async function loadSdStatus() {
+            try {
+                const res = await fetchApiWithFallback("/api/image/status");
+                const data = await res.json();
+                if (data.success && sdGpuBadge) {
+                    if (data.device === "cuda") {
+                        sdGpuBadge.innerHTML = `<span class="dot green"></span> GPU: ${data.device_name} (${data.vram_total_gb}GB VRAM)`;
+                    } else {
+                        sdGpuBadge.innerHTML = `<span class="dot yellow"></span> CPU Mode`;
+                    }
+                }
+            } catch (e) {
+                console.warn("[SDStudio] Lỗi lấy status GPU:", e);
+            }
+        }
+
+        // 8. Load Models Dropdown
+        async function loadSdModels() {
+            try {
+                const res = await fetchApiWithFallback("/api/image/models");
+                const data = await res.json();
+                if (data.success && data.models && sdModelSelect) {
+                    sdModelSelect.innerHTML = "";
+                    data.models.forEach(m => {
+                        const opt = document.createElement("option");
+                        opt.value = m.id;
+                        opt.textContent = m.name;
+                        sdModelSelect.appendChild(opt);
+                    });
+                }
+            } catch (e) {
+                console.warn("[SDStudio] Lỗi nạp danh sách model SD:", e);
+            }
+        }
+
+        // 9. Load History Gallery
+        async function loadSdHistory() {
+            if (!sdHistoryGrid) return;
+            try {
+                const res = await fetchApiWithFallback("/api/image/history?limit=30");
+                const data = await res.json();
+                if (data.success && data.history) {
+                    if (sdHistoryCount) sdHistoryCount.textContent = data.history.length;
+                    sdHistoryGrid.innerHTML = "";
+
+                    if (data.history.length === 0) {
+                        sdHistoryGrid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 20px; color: var(--text-muted); font-size: 0.85rem;">Chưa có tác phẩm nào trong thư viện. Hãy tạo ảnh đầu tiên!</div>`;
+                        return;
+                    }
+
+                    const apiBase = CONFIG.getApiBase();
+                    data.history.forEach(item => {
+                        const card = document.createElement("div");
+                        card.className = "sd-history-card";
+                        const fullImgUrl = `${apiBase}${item.url}`;
+
+                        card.innerHTML = `
+                            <img src="${fullImgUrl}" alt="${escapeHtml(item.prompt)}" loading="lazy">
+                            <div class="sd-history-card-hover">
+                                <div class="sd-history-prompt-preview">${escapeHtml(item.prompt)}</div>
+                                <div class="sd-history-card-actions">
+                                    <button type="button" class="btn-use-prompt" title="Dùng lại Prompt này">📋 Dùng</button>
+                                    <button type="button" class="btn-view-card" title="Xem trên Canvas">👁️ Xem</button>
+                                    <a href="${fullImgUrl}" download="${item.filename}" title="Tải về">⬇️</a>
+                                </div>
+                            </div>
+                        `;
+
+                        // Click to view on canvas
+                        const viewBtn = card.querySelector(".btn-view-card");
+                        if (viewBtn) {
+                            viewBtn.addEventListener("click", (e) => {
+                                e.stopPropagation();
+                                displayImageOnCanvas(item);
+                            });
+                        }
+
+                        // Click to reuse prompt
+                        const promptBtn = card.querySelector(".btn-use-prompt");
+                        if (promptBtn) {
+                            promptBtn.addEventListener("click", (e) => {
+                                e.stopPropagation();
+                                if (sdPromptInput) {
+                                    sdPromptInput.value = item.prompt;
+                                    sdPromptInput.focus();
+                                }
+                                if (item.style) {
+                                    sdStylePills.forEach(p => {
+                                        if (p.getAttribute("data-style") === item.style) p.click();
+                                    });
+                                }
+                            });
+                        }
+
+                        card.addEventListener("click", () => {
+                            displayImageOnCanvas(item);
+                        });
+
+                        sdHistoryGrid.appendChild(card);
+                    });
+                }
+            } catch (e) {
+                console.warn("[SDStudio] Lỗi tải lịch sử ảnh:", e);
+            }
+        }
+
+        function displayImageOnCanvas(item) {
+            const apiBase = CONFIG.getApiBase();
+            const fullImgUrl = `${apiBase}${item.url}`;
+            if (sdResultImg) sdResultImg.src = fullImgUrl;
+            if (sdDownloadBtn) {
+                sdDownloadBtn.href = fullImgUrl;
+                sdDownloadBtn.setAttribute("download", item.filename);
+            }
+            if (sdMetaTime) sdMetaTime.textContent = `⚡ ${item.time_taken || 0}s`;
+            if (sdMetaSize) sdMetaSize.textContent = `📐 ${item.width || 512}×${item.height || 512}`;
+            if (sdMetaSeed) sdMetaSeed.textContent = `🌱 Seed: ${item.seed || '-'}`;
+            lastGeneratedSeed = item.seed;
+
+            if (sdPromptUsedBox && sdPromptUsedText) {
+                sdPromptUsedBox.style.display = "block";
+                sdPromptUsedText.textContent = item.enhanced_prompt || item.prompt;
+                if (sdStyleBadge) sdStyleBadge.textContent = item.style_name || item.style || "Tự do";
+            }
+
+            if (sdEmptyState) sdEmptyState.style.display = "none";
+            if (sdLoadingState) sdLoadingState.style.display = "none";
+            if (sdResultState) sdResultState.style.display = "flex";
+
+            try {
+                const canvasCard = document.querySelector(".sd-canvas-card");
+                if (canvasCard) canvasCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            } catch (_) {}
+        }
+
+        // 10. Generate Button Handler
+        if (sdGenerateBtn) {
+            sdGenerateBtn.addEventListener("click", async () => {
+                const prompt = sdPromptInput ? sdPromptInput.value.trim() : "";
+                if (!prompt) {
+                    alert("Vui lòng nhập mô tả ý tưởng bức ảnh cần tạo!");
+                    if (sdPromptInput) sdPromptInput.focus();
+                    return;
+                }
+
+                const negativePrompt = sdNegPromptInput ? sdNegPromptInput.value.trim() : "";
+                const steps = sdStepsSlider ? parseInt(sdStepsSlider.value) : 25;
+                const cfgScale = sdCfgSlider ? parseFloat(sdCfgSlider.value) : 7.5;
+                const seed = sdSeedInput ? parseInt(sdSeedInput.value) : -1;
+                const enhancePrompt = sdEnhanceCheck ? sdEnhanceCheck.checked : true;
+                const modelId = sdModelSelect ? sdModelSelect.value : "runwayml/stable-diffusion-v1-5";
+
+                sdGenerateBtn.disabled = true;
+                if (sdEmptyState) sdEmptyState.style.display = "none";
+                if (sdResultState) sdResultState.style.display = "none";
+                if (sdPromptUsedBox) sdPromptUsedBox.style.display = "none";
+                if (sdLoadingState) sdLoadingState.style.display = "flex";
+
+                const loadingDesc = document.getElementById("sd-loading-desc");
+                if (loadingDesc) {
+                    loadingDesc.textContent = enhancePrompt 
+                        ? "Đang dùng Ollama dịch & tối ưu prompt, sau đó nạp vào pipeline SD 1.5 trên GPU Quadro P600..." 
+                        : "Đang khuếch tán không gian tiềm ẩn (Latent Diffusion 25 steps) trên GPU Quadro P600...";
+                }
+
+                try {
+                    const res = await fetchApiWithFallback("/api/image/generate", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            prompt: prompt,
+                            negative_prompt: negativePrompt,
+                            style: currentSdStyle,
+                            width: currentSdWidth,
+                            height: currentSdHeight,
+                            steps: steps,
+                            cfg_scale: cfgScale,
+                            seed: seed,
+                            enhance_prompt: enhancePrompt,
+                            model_id: modelId
+                        })
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok || !data.success) {
+                        throw new Error(data.error || "Không thể tạo ảnh từ mô hình SD 1.5.");
+                    }
+
+                    displayImageOnCanvas(data);
+                    await loadSdHistory();
+
+                } catch (err) {
+                    console.error("[SDStudio] Lỗi tạo ảnh:", err);
+                    alert(`Lỗi khi tạo ảnh: ${err.message || 'Lỗi server'}`);
+                    if (sdEmptyState) sdEmptyState.style.display = "flex";
+                    if (sdLoadingState) sdLoadingState.style.display = "none";
+                } finally {
+                    sdGenerateBtn.disabled = false;
+                }
+            });
+        }
+
+        if (sdRefreshHistoryBtn) {
+            sdRefreshHistoryBtn.addEventListener("click", () => {
+                loadSdHistory();
+            });
+        }
+
+        // Initial loading calls
+        loadSdStatus();
+        loadSdModels();
+        loadSdHistory();
+    }
+
+    initImageStudio();
+    initRoleplay();
             }
             if (targetId === "tab-admin-models") {
                 initAdminModels();
@@ -5854,296 +6533,488 @@ document.addEventListener("DOMContentLoaded", () => {
     loadHistorySessions();
     initOfficeStudio();
 
+
+
     // =========================================================================
-    // AI PLAYGROUND: LLM PARAMETERS MANAGEMENT (DRAWER & PRESETS)
+    // AI PLAYGROUND: STABLE DIFFUSION 1.5 IMAGE STUDIO LOGIC
     // =========================================================================
-    const DEFAULT_CHAT_PARAMS = {
-        temperature: 0.70,
-        num_ctx: 8192,
-        top_p: 0.90,
-        repeat_penalty: 1.10,
-        num_predict: 2048,
-        system_prompt: ""
-    };
+    let currentSdStyle = "none";
+    let currentSdWidth = 512;
+    let currentSdHeight = 512;
+    let lastGeneratedSeed = null;
 
-    const CHAT_PRESETS = {
-        default: {
-            temperature: 0.70,
-            num_ctx: 8192,
-            top_p: 0.90,
-            repeat_penalty: 1.10,
-            num_predict: 2048
-        },
-        coding: {
-            temperature: 0.15,
-            num_ctx: 8192,
-            top_p: 0.80,
-            repeat_penalty: 1.05,
-            num_predict: 4096
-        },
-        creative: {
-            temperature: 1.25,
-            num_ctx: 8192,
-            top_p: 0.95,
-            repeat_penalty: 1.15,
-            num_predict: 2048
-        },
-        deep: {
-            temperature: 0.30,
-            num_ctx: 16384,
-            top_p: 0.85,
-            repeat_penalty: 1.10,
-            num_predict: 4096
-        }
-    };
+    const SAMPLE_SD_PROMPTS = [
+        "Một chú phi hành gia mèo đáng yêu đang lơ lửng ngắm Trái Đất trong không gian vũ trụ, ánh sao lấp lánh, phong cách anime rực rỡ, 8k",
+        "A futuristic cyberpunk Vietnamese street food stall at night, glowing neon signs, rain reflections on asphalt, highly detailed, cinematic lighting",
+        "Lâu đài cổ tích trên mây bồng bềnh, thác nước đổ xuống không trung, cầu vồng rực rỡ phong cách anime Makoto Shinkai, studio ghibli",
+        "Chân dung một cô gái Việt Nam mặc áo dài trắng truyền thống đứng bên hồ sen mùa hạ, ánh nắng dịu dàng, ảnh chụp chân dung dslr 8k",
+        "A majestic dragon perched on a mountain peak, storm clouds, lightning, dramatic cinematic lighting, 8k concept art, Artstation trending",
+        "Robot cổ điển phong cách steampunk bằng đồng thau đang đọc sách trong thư viện cổ ngập tràn ánh nắng vàng ấm áp",
+        "Thành phố dưới đáy đại dương rực rỡ san hô phát sáng, cá voi khổng lồ bơi qua các tháp kính pha lê, phong cách digital 3d Unreal Engine",
+        "Một tách cà phê nóng tỏa khói bốc lên hình trái tim trên bàn gỗ bên cửa sổ ngắm mưa rơi, không khí ấm cúng, ảnh chụp macro dslr"
+    ];
 
-    let activeChatParams = { ...DEFAULT_CHAT_PARAMS };
+    function initImageStudio() {
+        const sdModelSelect = document.getElementById("sd-model-select");
+        const sdPromptInput = document.getElementById("sd-prompt-input");
+        const sdEnhanceCheck = document.getElementById("sd-enhance-prompt-check");
+        const sdStylePills = document.querySelectorAll(".sd-style-pill");
+        const sdRatioBtns = document.querySelectorAll(".sd-ratio-btn");
+        const sdToggleAdvancedBtn = document.getElementById("sd-toggle-advanced-btn");
+        const sdAdvancedPanel = document.getElementById("sd-advanced-panel");
+        const sdNegPromptInput = document.getElementById("sd-neg-prompt");
+        const sdStepsSlider = document.getElementById("sd-steps-slider");
+        const sdStepsVal = document.getElementById("sd-steps-val");
+        const sdCfgSlider = document.getElementById("sd-cfg-slider");
+        const sdCfgVal = document.getElementById("sd-cfg-val");
+        const sdSeedInput = document.getElementById("sd-seed-input");
+        const sdGenerateBtn = document.getElementById("sd-generate-btn");
+        const sdSampleBtn = document.getElementById("sd-btn-sample-prompt");
+        const sdEmptyState = document.getElementById("sd-empty-state");
+        const sdLoadingState = document.getElementById("sd-loading-state");
+        const sdResultState = document.getElementById("sd-result-state");
+        const sdResultImg = document.getElementById("sd-result-img");
+        const sdDownloadBtn = document.getElementById("sd-download-btn");
+        const sdReuseSeedBtn = document.getElementById("sd-reuse-seed-btn");
+        const sdMetaTime = document.getElementById("sd-meta-time");
+        const sdMetaSize = document.getElementById("sd-meta-size");
+        const sdMetaSeed = document.getElementById("sd-meta-seed");
+        const sdPromptUsedBox = document.getElementById("sd-prompt-used-box");
+        const sdPromptUsedText = document.getElementById("sd-prompt-used-text");
+        const sdStyleBadge = document.getElementById("sd-style-badge");
+        const sdHistoryGrid = document.getElementById("sd-history-grid");
+        const sdHistoryCount = document.getElementById("sd-history-count");
+        const sdRefreshHistoryBtn = document.getElementById("sd-refresh-history-btn");
+        const sdGpuBadge = document.getElementById("sd-gpu-badge");
 
-    function loadSavedChatParams() {
-        try {
-            const raw = localStorage.getItem("AI_PLAYGROUND_PARAMS");
-            if (raw) {
-                const parsed = JSON.parse(raw);
-                activeChatParams = { ...DEFAULT_CHAT_PARAMS, ...parsed };
-            }
-        } catch (_) {}
-    }
+        // Model & GPU Status Card Elements
+        const sdStatusDot = document.getElementById("sd-status-dot");
+        const sdStatusTitle = document.getElementById("sd-status-title");
+        const sdStatusText = document.getElementById("sd-status-text");
+        const sdBtnLoadModel = document.getElementById("sd-btn-load-model");
+        const sdBtnUnloadModel = document.getElementById("sd-btn-unload-model");
+        const sdDownloadProgressContainer = document.getElementById("sd-download-progress-container");
+        const sdProgressFile = document.getElementById("sd-progress-file");
+        const sdProgressPct = document.getElementById("sd-progress-pct");
+        const sdProgressBarFill = document.getElementById("sd-progress-bar-fill");
+        const sdProgressSize = document.getElementById("sd-progress-size");
+        const sdProgressSpeed = document.getElementById("sd-progress-speed");
+        const sdProgressEta = document.getElementById("sd-progress-eta");
 
-    function saveChatParams() {
-        try {
-            localStorage.setItem("AI_PLAYGROUND_PARAMS", JSON.stringify(activeChatParams));
-        } catch (_) {}
-    }
+        let sdPollTimer = null;
 
-    function updateChatParamsBadges() {
-        const tempStr = parseFloat(activeChatParams.temperature || 0.7).toFixed(2);
-        const ctxK = Math.round(parseInt(activeChatParams.num_ctx || 8192) / 1024) + "K";
-        const badgeText = `${tempStr} / ${ctxK}`;
-
-        const directIndicator = document.getElementById("direct-params-indicator");
-        if (directIndicator) directIndicator.textContent = badgeText;
-
-        const ragIndicator = document.getElementById("rag-params-indicator");
-        if (ragIndicator) ragIndicator.textContent = badgeText;
-    }
-
-    function syncChatParamsUI() {
-        // Direct drawer elements
-        const dTempSlider = document.getElementById("direct-param-temp");
-        const dTempVal = document.getElementById("direct-param-temp-val");
-        if (dTempSlider) dTempSlider.value = activeChatParams.temperature;
-        if (dTempVal) dTempVal.textContent = parseFloat(activeChatParams.temperature || 0.7).toFixed(2);
-
-        const dCtxSelect = document.getElementById("direct-param-ctx");
-        const dCtxVal = document.getElementById("direct-param-ctx-val");
-        if (dCtxSelect) dCtxSelect.value = activeChatParams.num_ctx;
-        if (dCtxVal) dCtxVal.textContent = Number(activeChatParams.num_ctx || 8192).toLocaleString() + " tokens";
-
-        const dToppSlider = document.getElementById("direct-param-topp");
-        const dToppVal = document.getElementById("direct-param-topp-val");
-        if (dToppSlider) dToppSlider.value = activeChatParams.top_p;
-        if (dToppVal) dToppVal.textContent = parseFloat(activeChatParams.top_p || 0.9).toFixed(2);
-
-        const dRepSlider = document.getElementById("direct-param-rep");
-        const dRepVal = document.getElementById("direct-param-rep-val");
-        if (dRepSlider) dRepSlider.value = activeChatParams.repeat_penalty;
-        if (dRepVal) dRepVal.textContent = parseFloat(activeChatParams.repeat_penalty || 1.1).toFixed(2);
-
-        const dMaxSelect = document.getElementById("direct-param-max-tokens");
-        const dMaxVal = document.getElementById("direct-param-max-tokens-val");
-        if (dMaxSelect) dMaxSelect.value = activeChatParams.num_predict;
-        if (dMaxVal) dMaxVal.textContent = activeChatParams.num_predict === -1 ? "Không giới hạn" : Number(activeChatParams.num_predict || 2048).toLocaleString();
-
-        const dSysPrompt = document.getElementById("direct-param-system-prompt");
-        if (dSysPrompt) dSysPrompt.value = activeChatParams.system_prompt || "";
-
-        // RAG drawer elements
-        const rTempSlider = document.getElementById("rag-param-temp");
-        const rTempVal = document.getElementById("rag-param-temp-val");
-        if (rTempSlider) rTempSlider.value = activeChatParams.temperature;
-        if (rTempVal) rTempVal.textContent = parseFloat(activeChatParams.temperature || 0.7).toFixed(2);
-
-        const rCtxSelect = document.getElementById("rag-param-ctx");
-        const rCtxVal = document.getElementById("rag-param-ctx-val");
-        if (rCtxSelect) rCtxSelect.value = activeChatParams.num_ctx;
-        if (rCtxVal) rCtxVal.textContent = Number(activeChatParams.num_ctx || 8192).toLocaleString() + " tokens";
-
-        const rToppSlider = document.getElementById("rag-param-topp");
-        const rToppVal = document.getElementById("rag-param-topp-val");
-        if (rToppSlider) rToppSlider.value = activeChatParams.top_p;
-        if (rToppVal) rToppVal.textContent = parseFloat(activeChatParams.top_p || 0.9).toFixed(2);
-
-        const rRepSlider = document.getElementById("rag-param-rep");
-        const rRepVal = document.getElementById("rag-param-rep-val");
-        if (rRepSlider) rRepSlider.value = activeChatParams.repeat_penalty;
-        if (rRepVal) rRepVal.textContent = parseFloat(activeChatParams.repeat_penalty || 1.1).toFixed(2);
-
-        const rMaxSelect = document.getElementById("rag-param-max-tokens");
-        const rMaxVal = document.getElementById("rag-param-max-tokens-val");
-        if (rMaxSelect) rMaxSelect.value = activeChatParams.num_predict;
-        if (rMaxVal) rMaxVal.textContent = activeChatParams.num_predict === -1 ? "Không giới hạn" : Number(activeChatParams.num_predict || 2048).toLocaleString();
-
-        const rSysPrompt = document.getElementById("rag-param-system-prompt");
-        if (rSysPrompt) rSysPrompt.value = activeChatParams.system_prompt || "";
-
-        updateChatParamsBadges();
-    }
-
-    function applyChatPreset(presetName) {
-        const preset = CHAT_PRESETS[presetName];
-        if (!preset) return;
-        activeChatParams = {
-            ...activeChatParams,
-            ...preset
-        };
-        saveChatParams();
-        syncChatParamsUI();
-
-        // Update active class on preset pills in both drawers
-        document.querySelectorAll(".param-preset-pill").forEach(pill => {
-            if (pill.getAttribute("data-preset") === presetName) {
-                pill.classList.add("active");
-            } else {
-                pill.classList.remove("active");
-            }
-        });
-    }
-
-    function initChatParameters() {
-        loadSavedChatParams();
-        syncChatParamsUI();
-
-        // Toggle buttons
-        const directToggleBtn = document.getElementById("direct-toggle-params-btn");
-        const directDrawer = document.getElementById("direct-params-drawer");
-        if (directToggleBtn && directDrawer) {
-            directToggleBtn.addEventListener("click", () => {
-                const isOpen = directDrawer.style.display !== "none";
-                directDrawer.style.display = isOpen ? "none" : "block";
-                directToggleBtn.classList.toggle("active", !isOpen);
-                if (!isOpen) syncChatParamsUI();
-            });
-        }
-
-        const ragToggleBtn = document.getElementById("rag-toggle-params-btn");
-        const ragDrawer = document.getElementById("rag-params-drawer");
-        if (ragToggleBtn && ragDrawer) {
-            ragToggleBtn.addEventListener("click", () => {
-                const isOpen = ragDrawer.style.display !== "none";
-                ragDrawer.style.display = isOpen ? "none" : "block";
-                ragToggleBtn.classList.toggle("active", !isOpen);
-                if (!isOpen) syncChatParamsUI();
-            });
-        }
-
-        // Close buttons
-        const directCloseBtn = document.getElementById("direct-params-close-btn");
-        if (directCloseBtn && directDrawer) {
-            directCloseBtn.addEventListener("click", () => {
-                directDrawer.style.display = "none";
-                if (directToggleBtn) directToggleBtn.classList.remove("active");
-            });
-        }
-
-        const ragCloseBtn = document.getElementById("rag-params-close-btn");
-        if (ragCloseBtn && ragDrawer) {
-            ragCloseBtn.addEventListener("click", () => {
-                ragDrawer.style.display = "none";
-                if (ragToggleBtn) ragToggleBtn.classList.remove("active");
-            });
-        }
-
-        // Reset buttons
-        const resetHandler = () => {
-            activeChatParams = { ...DEFAULT_CHAT_PARAMS };
-            saveChatParams();
-            syncChatParamsUI();
-            applyChatPreset("default");
-        };
-        const directResetBtn = document.getElementById("direct-params-reset-btn");
-        if (directResetBtn) directResetBtn.addEventListener("click", resetHandler);
-        const ragResetBtn = document.getElementById("rag-params-reset-btn");
-        if (ragResetBtn) ragResetBtn.addEventListener("click", resetHandler);
-
-        // Preset pill clicks
-        document.querySelectorAll(".param-preset-pill").forEach(pill => {
+        // 1. Style Pills Handler
+        sdStylePills.forEach(pill => {
             pill.addEventListener("click", () => {
-                const preset = pill.getAttribute("data-preset");
-                applyChatPreset(preset);
+                sdStylePills.forEach(p => p.classList.remove("active"));
+                pill.classList.add("active");
+                currentSdStyle = pill.getAttribute("data-style") || "none";
             });
         });
 
-        // Sliders binding
-        const bindSlider = (sliderId, valId, key, isFloat) => {
-            const el = document.getElementById(sliderId);
-            const valEl = document.getElementById(valId);
-            if (el) {
-                el.addEventListener("input", () => {
-                    const parsedVal = isFloat ? parseFloat(el.value) : parseInt(el.value);
-                    activeChatParams[key] = parsedVal;
-                    if (valEl) valEl.textContent = isFloat ? parsedVal.toFixed(2) : parsedVal;
-                    saveChatParams();
-                    updateChatParamsBadges();
-                });
+        // 2. Aspect Ratio Buttons Handler
+        sdRatioBtns.forEach(btn => {
+            btn.addEventListener("click", () => {
+                sdRatioBtns.forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                currentSdWidth = parseInt(btn.getAttribute("data-width") || 512);
+                currentSdHeight = parseInt(btn.getAttribute("data-height") || 512);
+            });
+        });
+
+        // 3. Toggle Advanced Panel
+        if (sdToggleAdvancedBtn && sdAdvancedPanel) {
+            sdToggleAdvancedBtn.addEventListener("click", () => {
+                const isHidden = sdAdvancedPanel.style.display === "none";
+                sdAdvancedPanel.style.display = isHidden ? "block" : "none";
+                const svg = sdToggleAdvancedBtn.querySelector("svg");
+                if (svg) svg.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
+            });
+        }
+
+        // 4. Sliders live update
+        if (sdStepsSlider && sdStepsVal) {
+            sdStepsSlider.addEventListener("input", () => {
+                sdStepsVal.textContent = sdStepsSlider.value;
+            });
+        }
+        if (sdCfgSlider && sdCfgVal) {
+            sdCfgSlider.addEventListener("input", () => {
+                sdCfgVal.textContent = parseFloat(sdCfgSlider.value).toFixed(1);
+            });
+        }
+
+        // 5. Random Sample Prompt
+        if (sdSampleBtn && sdPromptInput) {
+            sdSampleBtn.addEventListener("click", () => {
+                const randomPrompt = SAMPLE_SD_PROMPTS[Math.floor(Math.random() * SAMPLE_SD_PROMPTS.length)];
+                sdPromptInput.value = randomPrompt;
+                sdPromptInput.focus();
+            });
+        }
+
+        // 6. Reuse Seed
+        if (sdReuseSeedBtn && sdSeedInput) {
+            sdReuseSeedBtn.addEventListener("click", () => {
+                if (lastGeneratedSeed !== null && lastGeneratedSeed !== undefined) {
+                    sdSeedInput.value = lastGeneratedSeed;
+                    if (sdAdvancedPanel && sdAdvancedPanel.style.display === "none") {
+                        sdAdvancedPanel.style.display = "block";
+                    }
+                    sdSeedInput.focus();
+                    alert(`Đã gán Seed: ${lastGeneratedSeed} vào ô cài đặt nâng cao!`);
+                }
+            });
+        }
+
+        // 7. Load GPU & Model Status (kèm tiến trình tải)
+        async function loadSdStatus() {
+            try {
+                const res = await fetchApiWithFallback("/api/image/status");
+                const data = await res.json();
+                if (!data.success) return;
+
+                // Update GPU badge
+                if (sdGpuBadge) {
+                    if (data.device === "cuda") {
+                        sdGpuBadge.innerHTML = `<span class="dot green"></span> GPU: ${data.device_name} (${data.vram_used_gb || 0}/${data.vram_total_gb || 4.0}GB VRAM)`;
+                    } else {
+                        sdGpuBadge.innerHTML = `<span class="dot yellow"></span> CPU Mode`;
+                    }
+                }
+
+                // Update Status Card
+                if (sdStatusTitle && sdStatusText) {
+                    const downloadInfo = data.download_info;
+                    const isDownloading = data.state === "downloading" || (downloadInfo && downloadInfo.status === "downloading");
+
+                    if (data.model_loaded) {
+                        if (sdStatusDot) sdStatusDot.className = "dot green";
+                        sdStatusTitle.textContent = "Mô hình SD 1.5 đã nạp sẵn trong VRAM GPU";
+                        sdStatusText.textContent = data.message || `Đang chạy trên GPU ${data.device_name} (Đã cấp phát ${data.vram_used_gb} GB VRAM). Sẵn sàng tạo ảnh!`;
+                        if (sdBtnLoadModel) sdBtnLoadModel.style.display = "none";
+                        if (sdBtnUnloadModel) sdBtnUnloadModel.style.display = "inline-flex";
+                        if (sdDownloadProgressContainer) sdDownloadProgressContainer.style.display = "none";
+                    } else if (isDownloading && downloadInfo) {
+                        if (sdStatusDot) sdStatusDot.className = "dot blue";
+                        sdStatusTitle.textContent = "Đang tải tệp trọng số FP16 qua mạng (GPU 0%)...";
+                        sdStatusText.textContent = "Hệ thống đang tải trọng số SD 1.5 FP16 về máy qua đa luồng. Trong lúc tải qua mạng GPU chưa hoạt động. Khi tải xong, mô hình sẽ nạp vào GPU và chạy với 100% công suất.";
+                        if (sdBtnLoadModel) {
+                            sdBtnLoadModel.style.display = "inline-flex";
+                            sdBtnLoadModel.disabled = true;
+                            sdBtnLoadModel.innerHTML = '<span class="spinner-sm" style="width:12px;height:12px;margin-right:4px;"></span> Đang tải...';
+                        }
+                        if (sdBtnUnloadModel) sdBtnUnloadModel.style.display = "none";
+
+                        // Update progress bar
+                        if (sdDownloadProgressContainer) {
+                            sdDownloadProgressContainer.style.display = "block";
+                            if (sdProgressFile) sdProgressFile.textContent = downloadInfo.current_file || "Đang tải...";
+                            if (sdProgressPct) sdProgressPct.textContent = `${downloadInfo.overall_percent || 0}%`;
+                            if (sdProgressBarFill) sdProgressBarFill.style.width = `${downloadInfo.overall_percent || 0}%`;
+                            if (sdProgressSize) sdProgressSize.textContent = `${downloadInfo.overall_downloaded_mb || 0} / ${downloadInfo.overall_total_mb || 2035} MB`;
+                            if (sdProgressSpeed) sdProgressSpeed.textContent = `⚡ ${downloadInfo.speed_mb_s || 0} MB/s`;
+                            if (sdProgressEta) sdProgressEta.textContent = `Còn ~${downloadInfo.eta_seconds || '--'}s`;
+                        }
+
+                        // Poll again in 1.5s
+                        if (sdPollTimer) clearTimeout(sdPollTimer);
+                        sdPollTimer = setTimeout(loadSdStatus, 1500);
+
+                    } else if (data.state === "loading_gpu") {
+                        if (sdStatusDot) sdStatusDot.className = "dot yellow";
+                        sdStatusTitle.textContent = "Đang nạp mô hình vào VRAM GPU Quadro P600...";
+                        sdStatusText.textContent = "Đang khởi tạo pipeline PyTorch và cấp phát bộ nhớ GPU...";
+                        if (sdBtnLoadModel) {
+                            sdBtnLoadModel.style.display = "inline-flex";
+                            sdBtnLoadModel.disabled = true;
+                            sdBtnLoadModel.innerHTML = '<span class="spinner-sm" style="width:12px;height:12px;margin-right:4px;"></span> Đang nạp...';
+                        }
+                        if (sdBtnUnloadModel) sdBtnUnloadModel.style.display = "none";
+                        if (sdDownloadProgressContainer) sdDownloadProgressContainer.style.display = "none";
+
+                        if (sdPollTimer) clearTimeout(sdPollTimer);
+                        sdPollTimer = setTimeout(loadSdStatus, 1500);
+
+                    } else if (data.is_local_ready) {
+                        if (sdStatusDot) sdStatusDot.className = "dot yellow";
+                        sdStatusTitle.textContent = "Mô hình đã có sẵn trên máy (Chưa nạp GPU)";
+                        sdStatusText.textContent = "Các tệp FP16 đã nằm sẵn trên ổ cứng. Bấm 'Nạp vào GPU' để nạp tức thì trong 5-8 giây mà không cần tải từ mạng.";
+                        if (sdBtnLoadModel) {
+                            sdBtnLoadModel.style.display = "inline-flex";
+                            sdBtnLoadModel.disabled = false;
+                            sdBtnLoadModel.innerHTML = '<span>🚀 Nạp vào GPU</span>';
+                        }
+                        if (sdBtnUnloadModel) sdBtnUnloadModel.style.display = "none";
+                        if (sdDownloadProgressContainer) sdDownloadProgressContainer.style.display = "none";
+
+                    } else {
+                        if (sdStatusDot) sdStatusDot.className = "dot yellow";
+                        sdStatusTitle.textContent = "Mô hình SD 1.5 chưa được nạp";
+                        sdStatusText.textContent = "Lần đầu tiên cần tải trọng số FP16 (~2.0 GB). Bấm 'Tải & Nạp GPU' để bắt đầu tải ngầm siêu tốc.";
+                        if (sdBtnLoadModel) {
+                            sdBtnLoadModel.style.display = "inline-flex";
+                            sdBtnLoadModel.disabled = false;
+                            sdBtnLoadModel.innerHTML = '<span>🚀 Tải & Nạp GPU</span>';
+                        }
+                        if (sdBtnUnloadModel) sdBtnUnloadModel.style.display = "none";
+                        if (sdDownloadProgressContainer) sdDownloadProgressContainer.style.display = "none";
+                    }
+                }
+            } catch (e) {
+                console.warn("[SDStudio] Lỗi lấy status GPU:", e);
             }
-        };
+        }
 
-        bindSlider("direct-param-temp", "direct-param-temp-val", "temperature", true);
-        bindSlider("rag-param-temp", "rag-param-temp-val", "temperature", true);
+        // Load / Unload Buttons
+        if (sdBtnLoadModel) {
+            sdBtnLoadModel.addEventListener("click", async () => {
+                const modelId = sdModelSelect ? sdModelSelect.value : null;
+                sdBtnLoadModel.disabled = true;
+                sdBtnLoadModel.innerHTML = '<span class="spinner-sm" style="width:12px;height:12px;margin-right:4px;"></span> Đang xử lý...';
+                try {
+                    const res = await fetchApiWithFallback("/api/image/load_model", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ model_id: modelId })
+                    });
+                    const data = await res.json();
+                    if (data.message) {
+                        if (sdStatusText) sdStatusText.textContent = data.message;
+                    }
+                    loadSdStatus();
+                } catch (e) {
+                    alert(`Lỗi khi nạp mô hình: ${e.message}`);
+                    loadSdStatus();
+                }
+            });
+        }
 
-        bindSlider("direct-param-topp", "direct-param-topp-val", "top_p", true);
-        bindSlider("rag-param-topp", "rag-param-topp-val", "top_p", true);
+        if (sdBtnUnloadModel) {
+            sdBtnUnloadModel.addEventListener("click", async () => {
+                try {
+                    const res = await fetchApiWithFallback("/api/image/unload_model", { method: "POST" });
+                    const data = await res.json();
+                    if (data.success) {
+                        alert("Đã giải phóng VRAM GPU thành công!");
+                        loadSdStatus();
+                    }
+                } catch (e) {
+                    alert(`Lỗi giải phóng VRAM: ${e.message}`);
+                }
+            });
+        }
 
-        bindSlider("direct-param-rep", "direct-param-rep-val", "repeat_penalty", true);
-        bindSlider("rag-param-rep", "rag-param-rep-val", "repeat_penalty", true);
-
-        const bindSelect = (selectId, valId, key, isInt, suffix = "") => {
-            const el = document.getElementById(selectId);
-            const valEl = document.getElementById(valId);
-            if (el) {
-                el.addEventListener("change", () => {
-                    const parsedVal = isInt ? parseInt(el.value) : el.value;
-                    activeChatParams[key] = parsedVal;
-                    if (valEl) valEl.textContent = isInt ? (parsedVal === -1 ? "Không giới hạn" : Number(parsedVal).toLocaleString() + suffix) : parsedVal;
-                    saveChatParams();
-                    updateChatParamsBadges();
-                });
+        // 8. Load Models Dropdown
+        async function loadSdModels() {
+            try {
+                const res = await fetchApiWithFallback("/api/image/models");
+                const data = await res.json();
+                if (data.success && data.models && sdModelSelect) {
+                    sdModelSelect.innerHTML = "";
+                    data.models.forEach(m => {
+                        const opt = document.createElement("option");
+                        opt.value = m.id;
+                        opt.textContent = m.name;
+                        sdModelSelect.appendChild(opt);
+                    });
+                }
+            } catch (e) {
+                console.warn("[SDStudio] Lỗi nạp danh sách model SD:", e);
             }
-        };
+        }
 
-        bindSelect("direct-param-ctx", "direct-param-ctx-val", "num_ctx", true, " tokens");
-        bindSelect("rag-param-ctx", "rag-param-ctx-val", "num_ctx", true, " tokens");
+        // 9. Load History Gallery
+        async function loadSdHistory() {
+            if (!sdHistoryGrid) return;
+            try {
+                const res = await fetchApiWithFallback("/api/image/history?limit=30");
+                const data = await res.json();
+                if (data.success && data.history) {
+                    if (sdHistoryCount) sdHistoryCount.textContent = data.history.length;
+                    sdHistoryGrid.innerHTML = "";
 
-        bindSelect("direct-param-max-tokens", "direct-param-max-tokens-val", "num_predict", true);
-        bindSelect("rag-param-max-tokens", "rag-param-max-tokens-val", "num_predict", true);
+                    if (data.history.length === 0) {
+                        sdHistoryGrid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 20px; color: var(--text-muted); font-size: 0.85rem;">Chưa có tác phẩm nào trong thư viện. Hãy tạo ảnh đầu tiên!</div>`;
+                        return;
+                    }
 
-        const bindText = (textareaId, key) => {
-            const el = document.getElementById(textareaId);
-            if (el) {
-                el.addEventListener("input", () => {
-                    activeChatParams[key] = el.value.trim();
-                    saveChatParams();
-                });
+                    const apiBase = CONFIG.getApiBase();
+                    data.history.forEach(item => {
+                        const card = document.createElement("div");
+                        card.className = "sd-history-card";
+                        const fullImgUrl = `${apiBase}${item.url}`;
+
+                        card.innerHTML = `
+                            <img src="${fullImgUrl}" alt="${escapeHtml(item.prompt)}" loading="lazy">
+                            <div class="sd-history-card-hover">
+                                <div class="sd-history-prompt-preview">${escapeHtml(item.prompt)}</div>
+                                <div class="sd-history-card-actions">
+                                    <button type="button" class="btn-use-prompt" title="Dùng lại Prompt này">📋 Dùng</button>
+                                    <button type="button" class="btn-view-card" title="Xem trên Canvas">👁️ Xem</button>
+                                    <a href="${fullImgUrl}" download="${item.filename}" title="Tải về">⬇️</a>
+                                </div>
+                            </div>
+                        `;
+
+                        const viewBtn = card.querySelector(".btn-view-card");
+                        if (viewBtn) {
+                            viewBtn.addEventListener("click", (e) => {
+                                e.stopPropagation();
+                                displayImageOnCanvas(item);
+                            });
+                        }
+
+                        const promptBtn = card.querySelector(".btn-use-prompt");
+                        if (promptBtn) {
+                            promptBtn.addEventListener("click", (e) => {
+                                e.stopPropagation();
+                                if (sdPromptInput) {
+                                    sdPromptInput.value = item.prompt;
+                                    sdPromptInput.focus();
+                                }
+                                if (item.style) {
+                                    sdStylePills.forEach(p => {
+                                        if (p.getAttribute("data-style") === item.style) p.click();
+                                    });
+                                }
+                            });
+                        }
+
+                        card.addEventListener("click", () => {
+                            displayImageOnCanvas(item);
+                        });
+
+                        sdHistoryGrid.appendChild(card);
+                    });
+                }
+            } catch (e) {
+                console.warn("[SDStudio] Lỗi tải lịch sử ảnh:", e);
             }
-        };
-        bindText("direct-param-system-prompt", "system_prompt");
-        bindText("rag-param-system-prompt", "system_prompt");
+        }
+
+        function displayImageOnCanvas(item) {
+            const apiBase = CONFIG.getApiBase();
+            const fullImgUrl = `${apiBase}${item.url}`;
+            if (sdResultImg) sdResultImg.src = fullImgUrl;
+            if (sdDownloadBtn) {
+                sdDownloadBtn.href = fullImgUrl;
+                sdDownloadBtn.setAttribute("download", item.filename);
+            }
+            if (sdMetaTime) sdMetaTime.textContent = `⚡ ${item.time_taken || 0}s`;
+            if (sdMetaSize) sdMetaSize.textContent = `📐 ${item.width || 512}×${item.height || 512}`;
+            if (sdMetaSeed) sdMetaSeed.textContent = `🌱 Seed: ${item.seed || '-'}`;
+            lastGeneratedSeed = item.seed;
+
+            if (sdPromptUsedBox && sdPromptUsedText) {
+                sdPromptUsedBox.style.display = "block";
+                sdPromptUsedText.textContent = item.enhanced_prompt || item.prompt;
+                if (sdStyleBadge) sdStyleBadge.textContent = item.style_name || item.style || "Tự do";
+            }
+
+            if (sdEmptyState) sdEmptyState.style.display = "none";
+            if (sdLoadingState) sdLoadingState.style.display = "none";
+            if (sdResultState) sdResultState.style.display = "flex";
+
+            try {
+                const canvasCard = document.querySelector(".sd-canvas-card");
+                if (canvasCard) canvasCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            } catch (_) {}
+        }
+
+        // 10. Generate Button Handler
+        if (sdGenerateBtn) {
+            sdGenerateBtn.addEventListener("click", async () => {
+                const prompt = sdPromptInput ? sdPromptInput.value.trim() : "";
+                if (!prompt) {
+                    alert("Vui lòng nhập mô tả ý tưởng bức ảnh cần tạo!");
+                    if (sdPromptInput) sdPromptInput.focus();
+                    return;
+                }
+
+                const negativePrompt = sdNegPromptInput ? sdNegPromptInput.value.trim() : "";
+                const steps = sdStepsSlider ? parseInt(sdStepsSlider.value) : 25;
+                const cfgScale = sdCfgSlider ? parseFloat(sdCfgSlider.value) : 7.5;
+                const seed = sdSeedInput ? parseInt(sdSeedInput.value) : -1;
+                const enhancePrompt = sdEnhanceCheck ? sdEnhanceCheck.checked : true;
+                const modelId = sdModelSelect ? sdModelSelect.value : "runwayml/stable-diffusion-v1-5";
+
+                sdGenerateBtn.disabled = true;
+                if (sdEmptyState) sdEmptyState.style.display = "none";
+                if (sdResultState) sdResultState.style.display = "none";
+                if (sdPromptUsedBox) sdPromptUsedBox.style.display = "none";
+                if (sdLoadingState) sdLoadingState.style.display = "flex";
+
+                const loadingDesc = document.getElementById("sd-loading-desc");
+                if (loadingDesc) {
+                    loadingDesc.textContent = enhancePrompt 
+                        ? "Đang dùng Ollama dịch & tối ưu prompt, sau đó tạo ảnh trên GPU Quadro P600..." 
+                        : "Đang khuếch tán không gian tiềm ẩn (Latent Diffusion 25 steps) trên GPU Quadro P600...";
+                }
+
+                try {
+                    const res = await fetchApiWithFallback("/api/image/generate", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            prompt: prompt,
+                            negative_prompt: negativePrompt,
+                            style: currentSdStyle,
+                            width: currentSdWidth,
+                            height: currentSdHeight,
+                            steps: steps,
+                            cfg_scale: cfgScale,
+                            seed: seed,
+                            enhance_prompt: enhancePrompt,
+                            model_id: modelId
+                        })
+                    });
+
+                    const data = await res.json();
+
+                    // Nếu mô hình đang được tải ngầm
+                    if (res.status === 202 || data.is_downloading) {
+                        alert("Mô hình SD 1.5 đang được tải tệp trọng số về máy (~2.0 GB). Bạn có thể theo dõi tiến trình trực tiếp ở khung trạng thái phía trên!");
+                        if (sdEmptyState) sdEmptyState.style.display = "flex";
+                        if (sdLoadingState) sdLoadingState.style.display = "none";
+                        loadSdStatus();
+                        const statusCard = document.getElementById("sd-model-status-card");
+                        if (statusCard) statusCard.scrollIntoView({ behavior: "smooth", block: "center" });
+                        return;
+                    }
+
+                    if (!res.ok || !data.success) {
+                        throw new Error(data.error || "Không thể tạo ảnh từ mô hình SD 1.5.");
+                    }
+
+                    displayImageOnCanvas(data);
+                    await loadSdHistory();
+                    loadSdStatus();
+
+                } catch (err) {
+                    console.error("[SDStudio] Lỗi tạo ảnh:", err);
+                    alert(`Lỗi khi tạo ảnh: ${err.message || 'Lỗi server'}`);
+                    if (sdEmptyState) sdEmptyState.style.display = "flex";
+                    if (sdLoadingState) sdLoadingState.style.display = "none";
+                } finally {
+                    sdGenerateBtn.disabled = false;
+                }
+            });
+        }
+
+        if (sdRefreshHistoryBtn) {
+            sdRefreshHistoryBtn.addEventListener("click", () => {
+                loadSdHistory();
+            });
+        }
+
+        // Initial loading calls
+        loadSdStatus();
+        loadSdModels();
+        loadSdHistory();
     }
 
-    function getActiveChatOptions() {
-        return {
-            temperature: parseFloat(activeChatParams.temperature !== undefined ? activeChatParams.temperature : 0.70),
-            num_ctx: parseInt(activeChatParams.num_ctx || 8192),
-            top_p: parseFloat(activeChatParams.top_p !== undefined ? activeChatParams.top_p : 0.90),
-            repeat_penalty: parseFloat(activeChatParams.repeat_penalty !== undefined ? activeChatParams.repeat_penalty : 1.10),
-            num_predict: parseInt(activeChatParams.num_predict !== undefined ? activeChatParams.num_predict : 2048)
-        };
-    }
-
-    function getActiveSystemPrompt() {
-        return (activeChatParams.system_prompt || "").trim();
-    }
-
+    initImageStudio();
     initRoleplay();
     initChatParameters();
 });

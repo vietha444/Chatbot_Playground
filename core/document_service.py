@@ -25,7 +25,10 @@ from typing import List, Dict, Any, Optional, Tuple
 import requests
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+try:
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+except ImportError:
+    from langchain.text_splitter import RecursiveCharacterTextSplitter
 import chromadb
 from chromadb.api.types import Documents, EmbeddingFunction, Embeddings
 from core.config import Config

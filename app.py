@@ -49,6 +49,7 @@ from core.document_service import DocumentService
 from core.chat_history_service import ChatHistoryService
 from core.office import OfficeService
 from core.roleplay_service import RoleplayService
+from core.sd_service import SDService
 from core.model_service import ModelService
 
 app = Flask(__name__, static_folder="static", static_url_path="", template_folder="templates")
@@ -68,6 +69,7 @@ document_service = DocumentService()
 chat_history_service = ChatHistoryService()
 office_service = OfficeService(base_upload_dir=Config.UPLOAD_FOLDER, llm_service=llm_service)
 roleplay_service = RoleplayService()
+sd_service = SDService()
 
 os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(Config.DATA_DIR, exist_ok=True)
@@ -1360,6 +1362,130 @@ def roleplay_chat():
             print(f"[Roleplay Chat] Lưu tin nhắn Assistant vào DB: {db_save_err}")
 
     return Response(generate(), headers=stream_headers)
+
+
+
+# =========================================================================
+# AI PLAYGROUND: STABLE DIFFUSION 1.5 IMAGE GENERATION ROUTES
+# =========================================================================
+
+@app.route('/api/image/status', methods=['GET'])
+def image_status():
+    """Lấy thông tin phần cứng và trạng thái mô hình SD 1.5."""
+    try:
+        status = sd_service.get_status()
+        return jsonify({"success": True, **status})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/image/models', methods=['GET'])
+def image_models():
+    """Liệt kê các checkpoint SD 1.5 có sẵn."""
+    try:
+        models = sd_service.get_available_models()
+        return jsonify({"success": True, "models": models})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/image/load_model', methods=['POST'])
+def image_load_model():
+    """Kích hoạt tải và nạp mô hình SD 1.5 vào GPU."""
+    try:
+        data = request.get_json() or {}
+        model_id = data.get("model_id")
+        res = sd_service.start_loading_model(model_id)
+        return jsonify(res)
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/image/unload_model', methods=['POST'])
+def image_unload_model():
+    """Giải phóng VRAM GPU bằng cách gỡ mô hình khỏi bộ nhớ."""
+    try:
+        res = sd_service.unload_pipeline()
+        return jsonify({"success": True, "freed": res})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/image/generate', methods=['POST'])
+def image_generate():
+    """Sinh ảnh từ văn bản bằng mô hình Stable Diffusion 1.5."""
+    try:
+        data = request.get_json() or {}
+        prompt = data.get("prompt", "").strip()
+        if not prompt:
+            return jsonify({"success": False, "error": "Prompt không được để trống!"}), 400
+
+        negative_prompt = data.get("negative_prompt", "")
+        style = data.get("style", "none")
+        width = int(data.get("width", 512))
+        height = int(data.get("height", 512))
+        steps = int(data.get("steps", 25))
+        cfg_scale = float(data.get("cfg_scale", 7.5))
+        seed = int(data.get("seed", -1))
+        enhance_prompt = bool(data.get("enhance_prompt", False))
+        model_id = data.get("model_id", None)
+
+        # Kiểm tra nếu mô hình chưa sẵn sàng và chưa có file cục bộ
+        if not sd_service.pipe and not sd_service.is_local_model_ready():
+            sd_service.start_loading_model(model_id)
+            return jsonify({
+                "success": False,
+                "is_downloading": True,
+                "error": "Mô hình SD 1.5 đang được tải tệp trọng số về máy (~2.0 GB). Vui lòng theo dõi tiến trình tải trực quan ở đầu trang!"
+            }), 202
+
+        result = sd_service.generate(
+            prompt=prompt,
+            negative_prompt=negative_prompt,
+            style=style,
+            width=width,
+            height=height,
+            steps=steps,
+            cfg_scale=cfg_scale,
+            seed=seed,
+            enhance_prompt=enhance_prompt,
+            model_id=model_id
+        )
+
+        return jsonify(result)
+    except Exception as e:
+        print(f"[API Image Generate] Lỗi: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/image/history', methods=['GET'])
+def image_history():
+    """Lấy danh sách các ảnh đã sinh gần nhất."""
+    try:
+        limit = int(request.args.get("limit", 40))
+        history = sd_service.get_history(limit=limit)
+        return jsonify({"success": True, "history": history})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/image/view/<path:filename>', methods=['GET'])
+def image_view(filename):
+    """Phục vụ file ảnh đã tạo."""
+    try:
+        return send_from_directory(sd_service.output_dir, filename)
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Không tìm thấy ảnh: {e}"}), 404
+
+
+@app.route('/api/image/<path:filename>', methods=['DELETE'])
+def image_delete(filename):
+    """Xóa ảnh đã tạo."""
+    try:
+        success = sd_service.delete_image(filename)
+        return jsonify({"success": success})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 if __name__ == '__main__':

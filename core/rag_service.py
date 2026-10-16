@@ -31,7 +31,28 @@ import requests
 from rank_bm25 import BM25Okapi
 import chromadb
 from chromadb.api.types import Documents, EmbeddingFunction, Embeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter, CharacterTextSplitter
+try:
+    from langchain_text_splitters import RecursiveCharacterTextSplitter, CharacterTextSplitter
+except ImportError:
+    try:
+        from langchain.text_splitter import RecursiveCharacterTextSplitter, CharacterTextSplitter
+    except ImportError:
+        class CharacterTextSplitter:
+            def __init__(self, separator="\n\n", chunk_size=1000, chunk_overlap=200, length_function=len, is_separator_regex=False):
+                self.separator = separator
+                self.chunk_size = chunk_size
+                self.chunk_overlap = chunk_overlap
+            def create_documents(self, texts):
+                class Doc:
+                    def __init__(self, c): self.page_content = c
+                docs = []
+                for t in texts:
+                    step = max(1, self.chunk_size - self.chunk_overlap)
+                    for i in range(0, len(t), step):
+                        docs.append(Doc(t[i:i+self.chunk_size]))
+                return docs
+        class RecursiveCharacterTextSplitter(CharacterTextSplitter):
+            pass
 from core.config import Config
 
 

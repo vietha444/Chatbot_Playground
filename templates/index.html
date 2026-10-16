@@ -22,7 +22,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 
     <!-- App Styles -->
-    <link rel="stylesheet" href="css/style.css?v=3.1.0">
+    <link rel="stylesheet" href="css/style.css?v=3.3.0">
     <link rel="stylesheet" href="css/office.css?v=3.1.0">
 </head>
 <body>
@@ -52,6 +52,10 @@
                 <button class="tab-btn" data-tab="tab-rag-chat" title="Hỏi đáp & Tra cứu tri thức chuyên sâu từ tài liệu (RAG)">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
                     <span>Hỏi Đáp RAG</span>
+                </button>
+                <button class="tab-btn" data-tab="tab-image-gen" title="AI Canvas Studio - Tạo ảnh nghệ thuật bằng Stable Diffusion 1.5">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    <span>Tạo Ảnh SD 1.5</span>
                 </button>
                 <button class="tab-btn" data-tab="tab-ocr" title="Nhận diện ký tự OCR từ ảnh/PDF & Trích xuất công thức Toán học">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
@@ -170,7 +174,7 @@
                                 </select>
                             </div>
                             <div class="dock-actions-right">
-                                <button id="direct-toggle-params-btn" type="button" class="btn btn-outline btn-xs dock-params-btn" title="Tùy chỉnh thông số AI (Temperature, Context Length, Top-P...)">
+                                <button id="direct-toggle-params-btn" type="button" class="btn btn-outline btn-xs dock-params-btn" onclick="toggleChatParamsDrawer('direct')" title="Tùy chỉnh thông số AI (Temperature, Context Length, Top-P...)">
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                                     <span>Thông Số AI</span>
                                     <span id="direct-params-indicator" class="params-active-badge">0.7 / 8K</span>
@@ -191,10 +195,10 @@
                                 </div>
                                 <div class="params-presets-row">
                                     <span class="preset-label">Mẫu sẵn:</span>
-                                    <button type="button" class="param-preset-pill active" data-preset="default" title="Đàm thoại cân bằng, tự nhiên">⚖️ Cân Bằng</button>
-                                    <button type="button" class="param-preset-pill" data-preset="coding" title="Chính xác cao, lập trình, giải toán logic">🎯 Lập Trình & Logic</button>
-                                    <button type="button" class="param-preset-pill" data-preset="creative" title="Sáng tạo, phong phú từ ngữ, viết văn thơ">🎨 Sáng Tạo</button>
-                                    <button type="button" class="param-preset-pill" data-preset="deep" title="Đọc hiểu tài liệu dài, cửa sổ ngữ cảnh lớn">📚 Đọc Sâu</button>
+                                    <button type="button" class="param-preset-pill active" data-preset="default" onclick="applyChatPreset('default')" title="Đàm thoại cân bằng, tự nhiên">⚖️ Cân Bằng</button>
+                                    <button type="button" class="param-preset-pill" data-preset="coding" onclick="applyChatPreset('coding')" title="Chính xác cao, lập trình, giải toán logic">🎯 Lập Trình & Logic</button>
+                                    <button type="button" class="param-preset-pill" data-preset="creative" onclick="applyChatPreset('creative')" title="Sáng tạo, phong phú từ ngữ, viết văn thơ">🎨 Sáng Tạo</button>
+                                    <button type="button" class="param-preset-pill" data-preset="deep" onclick="applyChatPreset('deep')" title="Đọc hiểu tài liệu dài, cửa sổ ngữ cảnh lớn">📚 Đọc Sâu</button>
                                 </div>
                             </div>
 
@@ -284,11 +288,11 @@
                             </div>
 
                             <div class="params-drawer-footer">
-                                <button type="button" id="direct-params-reset-btn" class="btn btn-outline btn-xs" title="Khôi phục toàn bộ thông số về cấu hình mặc định ban đầu">
+                                <button type="button" id="direct-params-reset-btn" class="btn btn-outline btn-xs" onclick="resetChatParams()" title="Khôi phục toàn bộ thông số về cấu hình mặc định ban đầu">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
                                     <span>Khôi Phục Mặc Định</span>
                                 </button>
-                                <button type="button" id="direct-params-close-btn" class="btn btn-primary btn-xs">
+                                <button type="button" id="direct-params-close-btn" class="btn btn-primary btn-xs" onclick="toggleChatParamsDrawer('direct')">
                                     <span>Áp Dụng & Đóng</span>
                                 </button>
                             </div>
@@ -469,7 +473,7 @@
                                     </label>
                                 </div>
 
-                                <button id="rag-toggle-params-btn" type="button" class="btn btn-outline btn-xs dock-params-btn" title="Tùy chỉnh thông số AI (Temperature, Context Length, Top-P...)">
+                                <button id="rag-toggle-params-btn" type="button" class="btn btn-outline btn-xs dock-params-btn" onclick="toggleChatParamsDrawer('rag')" title="Tùy chỉnh thông số AI (Temperature, Context Length, Top-P...)">
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                                     <span>Thông Số AI</span>
                                     <span id="rag-params-indicator" class="params-active-badge">0.7 / 8K</span>
@@ -485,10 +489,10 @@
                                     </div>
                                     <div class="params-presets-row">
                                         <span class="preset-label">Mẫu sẵn:</span>
-                                        <button type="button" class="param-preset-pill active" data-preset="default" title="Đàm thoại cân bằng, tự nhiên">⚖️ Cân Bằng</button>
-                                        <button type="button" class="param-preset-pill" data-preset="coding" title="Chính xác cao, lập trình, giải toán logic">🎯 Lập Trình & Logic</button>
-                                        <button type="button" class="param-preset-pill" data-preset="creative" title="Sáng tạo, phong phú từ ngữ, viết văn thơ">🎨 Sáng Tạo</button>
-                                        <button type="button" class="param-preset-pill" data-preset="deep" title="Đọc hiểu tài liệu dài, cửa sổ ngữ cảnh lớn">📚 Đọc Sâu</button>
+                                        <button type="button" class="param-preset-pill active" data-preset="default" onclick="applyChatPreset('default')" title="Đàm thoại cân bằng, tự nhiên">⚖️ Cân Bằng</button>
+                                        <button type="button" class="param-preset-pill" data-preset="coding" onclick="applyChatPreset('coding')" title="Chính xác cao, lập trình, giải toán logic">🎯 Lập Trình & Logic</button>
+                                        <button type="button" class="param-preset-pill" data-preset="creative" onclick="applyChatPreset('creative')" title="Sáng tạo, phong phú từ ngữ, viết văn thơ">🎨 Sáng Tạo</button>
+                                        <button type="button" class="param-preset-pill" data-preset="deep" onclick="applyChatPreset('deep')" title="Đọc hiểu tài liệu dài, cửa sổ ngữ cảnh lớn">📚 Đọc Sâu</button>
                                     </div>
                                 </div>
 
@@ -578,11 +582,11 @@
                                 </div>
 
                                 <div class="params-drawer-footer">
-                                    <button type="button" id="rag-params-reset-btn" class="btn btn-outline btn-xs" title="Khôi phục toàn bộ thông số về cấu hình mặc định ban đầu">
+                                    <button type="button" id="rag-params-reset-btn" class="btn btn-outline btn-xs" onclick="resetChatParams()" title="Khôi phục toàn bộ thông số về cấu hình mặc định ban đầu">
                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
                                         <span>Khôi Phục Mặc Định</span>
                                     </button>
-                                    <button type="button" id="rag-params-close-btn" class="btn btn-primary btn-xs">
+                                    <button type="button" id="rag-params-close-btn" class="btn btn-primary btn-xs" onclick="toggleChatParamsDrawer('rag')">
                                         <span>Áp Dụng & Đóng</span>
                                     </button>
                                 </div>
@@ -608,6 +612,231 @@
             </section>
 
             <!-- ======================================================== -->
+            
+            <!-- ======================================================== -->
+            <!-- TAB: TẠO ẢNH NGHỆ THUẬT VỚI STABLE DIFFUSION 1.5 -->
+            <!-- ======================================================== -->
+            <section id="tab-image-gen" class="tab-content">
+                <div class="image-gen-container">
+                    <!-- CỘT TRÁI: BẢNG ĐIỀU KHIỂN & PROMPT -->
+                    <div class="image-gen-sidebar custom-scrollbar">
+                        <div class="image-gen-card">
+                            <div class="gen-card-header">
+                                <div class="gen-title-group">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                    <h3>AI Canvas Studio (SD 1.5)</h3>
+                                </div>
+                                <span id="sd-gpu-badge" class="badge-status-pill"><span class="dot green"></span> GPU Quadro P600</span>
+                            </div>
+
+                            <!-- BẢNG TRẠNG THÁI MÔ HÌNH & TIẾN TRÌNH TẢI / NẠP GPU -->
+                            <div id="sd-model-status-card" class="sd-status-card">
+                                <div class="sd-status-header">
+                                    <div class="sd-status-indicator">
+                                        <span id="sd-status-dot" class="dot yellow"></span>
+                                        <span id="sd-status-title" style="font-weight: 600; font-size: 0.8rem;">Trạng thái GPU & Mô hình</span>
+                                    </div>
+                                    <div class="sd-status-actions">
+                                        <button type="button" id="sd-btn-load-model" class="btn btn-xs btn-primary" title="Tải trọng số và nạp mô hình vào GPU">
+                                            <span>🚀 Nạp vào GPU</span>
+                                        </button>
+                                        <button type="button" id="sd-btn-unload-model" class="btn btn-xs btn-outline" style="display: none;" title="Giải phóng VRAM khỏi GPU">
+                                            <span>🔄 Giải phóng VRAM</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="sd-status-text" class="sd-status-desc">
+                                    Đang kiểm tra trạng thái mô hình...
+                                </div>
+                                <!-- Thanh tiến trình tải / nạp ngầm -->
+                                <div id="sd-download-progress-container" class="sd-progress-box" style="display: none;">
+                                    <div class="sd-progress-info">
+                                        <span id="sd-progress-file">Đang tải trọng số FP16...</span>
+                                        <strong id="sd-progress-pct">0%</strong>
+                                    </div>
+                                    <div class="sd-progress-bar-bg">
+                                        <div id="sd-progress-bar-fill" class="sd-progress-bar-fill" style="width: 0%;"></div>
+                                    </div>
+                                    <div class="sd-progress-meta">
+                                        <span id="sd-progress-size">0 / 0 MB</span>
+                                        <span id="sd-progress-speed">0 MB/s</span>
+                                        <span id="sd-progress-eta">ETA: --</span>
+                                    </div>
+                                    <small class="sd-progress-note">
+                                        💡 Lưu ý: Khi đang tải qua mạng, GPU hiển thị 0%. Ngay sau khi tải xong, mô hình sẽ nạp vào VRAM GPU Quadro P600 và chạy với 100% công suất!
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Model Selector -->
+                            <div class="form-group" style="margin-bottom: 0.85rem;">
+                                <label class="control-label" for="sd-model-select" style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">🤖 Mô hình SD 1.5:</label>
+                                <select id="sd-model-select" class="custom-select" style="width: 100%; font-size: 0.82rem;">
+                                    <option value="runwayml/stable-diffusion-v1-5" selected>⭐ Stable Diffusion v1.5 (Gốc - FP16 Tối ưu VRAM)</option>
+                                </select>
+                            </div>
+
+                            <!-- Prompt Input -->
+                            <div class="form-group" style="margin-bottom: 0.85rem;">
+                                <div class="label-with-action">
+                                    <label class="control-label" for="sd-prompt-input" style="font-size: 0.8rem; font-weight: 600;">✍️ Ý tưởng mô tả ảnh (Prompt):</label>
+                                    <button type="button" id="sd-btn-sample-prompt" class="btn-text-action" title="Gợi ý một prompt mẫu chất lượng cao">🎲 Gợi ý mẫu</button>
+                                </div>
+                                <textarea id="sd-prompt-input" rows="3" class="custom-textarea" style="width: 100%; font-size: 0.82rem; border-radius: 12px; padding: 8px 10px;" placeholder="Nhập mô tả bằng tiếng Việt hoặc tiếng Anh (Ví dụ: Một chú mèo phi hành gia đáng yêu lơ lửng trong vũ trụ ngắm Trái Đất, ánh sao lấp lánh, phong cách anime rực rỡ, 8k)..."></textarea>
+                            </div>
+
+                            <!-- AI Enhance Prompt Switch (Ollama) -->
+                            <div class="enhance-prompt-box">
+                                <label class="switch-toggle-label">
+                                    <input type="checkbox" id="sd-enhance-prompt-check" checked>
+                                    <span>✨ Dịch & Tối ưu Prompt bằng Ollama AI</span>
+                                </label>
+                                <small style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 4px; line-height: 1.35;">
+                                    Tự động phân tích tiếng Việt, bổ sung từ khóa ánh sáng, độ phân giải và phong cách tối ưu cho SD 1.5.
+                                </small>
+                            </div>
+
+                            <!-- Style Presets Grid -->
+                            <div class="form-group" style="margin-bottom: 0.85rem;">
+                                <label class="control-label" style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 0.35rem;">🎨 Phong cách nghệ thuật:</label>
+                                <div class="sd-style-grid">
+                                    <button type="button" class="sd-style-pill active" data-style="none">✨ Tự do</button>
+                                    <button type="button" class="sd-style-pill" data-style="photorealistic">📸 Chân Thực</button>
+                                    <button type="button" class="sd-style-pill" data-style="anime">🌸 Anime</button>
+                                    <button type="button" class="sd-style-pill" data-style="cyberpunk">🌌 Cyberpunk</button>
+                                    <button type="button" class="sd-style-pill" data-style="oil_painting">🖌️ Sơn Dầu</button>
+                                    <button type="button" class="sd-style-pill" data-style="digital_3d">🎮 3D Pixar</button>
+                                    <button type="button" class="sd-style-pill" data-style="cinematic">🎬 Điện Ảnh</button>
+                                    <button type="button" class="sd-style-pill" data-style="fantasy">🐉 Huyền Ảo</button>
+                                </div>
+                            </div>
+
+                            <!-- Aspect Ratio & Dimensions -->
+                            <div class="form-group" style="margin-bottom: 0.85rem;">
+                                <label class="control-label" style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 0.35rem;">📐 Tỷ lệ & Kích thước (Tối ưu 4GB VRAM):</label>
+                                <div class="sd-ratio-row">
+                                    <button type="button" class="sd-ratio-btn active" data-width="512" data-height="512">
+                                        <span>1:1</span>
+                                        <small>512×512</small>
+                                    </button>
+                                    <button type="button" class="sd-ratio-btn" data-width="512" data-height="768">
+                                        <span>2:3</span>
+                                        <small>512×768 (Dọc)</small>
+                                    </button>
+                                    <button type="button" class="sd-ratio-btn" data-width="768" data-height="512">
+                                        <span>3:2</span>
+                                        <small>768×512 (Ngang)</small>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Collapsible Advanced Settings -->
+                            <div class="sd-advanced-collapse">
+                                <button type="button" id="sd-toggle-advanced-btn" class="sd-advanced-toggle">
+                                    <span>⚙️ Cài đặt chi tiết (Negative Prompt, Steps, CFG, Seed)</span>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </button>
+                                <div id="sd-advanced-panel" class="sd-advanced-panel" style="display: none;">
+                                    <div class="form-group" style="margin-bottom: 0.65rem;">
+                                        <label class="control-label" for="sd-neg-prompt" style="font-size: 0.74rem; font-weight: 600; display: block; margin-bottom: 0.2rem;">🚫 Negative Prompt (Loại bỏ chi tiết xấu):</label>
+                                        <textarea id="sd-neg-prompt" rows="2" class="custom-textarea" style="width: 100%; font-size: 0.78rem; border-radius: 8px;" placeholder="ugly, deformed, bad hands, blurry, low resolution, watermark..."></textarea>
+                                    </div>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; margin-bottom: 0.65rem;">
+                                        <div class="form-group">
+                                            <div style="display: flex; justify-content: space-between; font-size: 0.74rem; margin-bottom: 0.2rem;">
+                                                <span>Steps:</span>
+                                                <strong id="sd-steps-val" style="color: var(--primary);">25</strong>
+                                            </div>
+                                            <input type="range" id="sd-steps-slider" min="15" max="50" step="1" value="25" style="width: 100%;">
+                                        </div>
+                                        <div class="form-group">
+                                            <div style="display: flex; justify-content: space-between; font-size: 0.74rem; margin-bottom: 0.2rem;">
+                                                <span>CFG Scale:</span>
+                                                <strong id="sd-cfg-val" style="color: var(--primary);">7.5</strong>
+                                            </div>
+                                            <input type="range" id="sd-cfg-slider" min="1.0" max="15.0" step="0.5" value="7.5" style="width: 100%;">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label" for="sd-seed-input" style="font-size: 0.74rem; font-weight: 600; display: block; margin-bottom: 0.2rem;">Seed (-1 = Ngẫu nhiên):</label>
+                                        <input type="number" id="sd-seed-input" class="custom-input" style="width: 100%; font-size: 0.78rem; padding: 4px 8px;" value="-1" placeholder="-1">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Generate Button -->
+                            <button type="button" id="sd-generate-btn" class="btn btn-primary btn-block btn-lg" style="margin-top: 1rem; border-radius: 14px; padding: 12px; font-weight: 700;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                                <span>Tạo Ảnh Ngay (SD 1.5)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- CỘT PHẢI: KHUNG XEM ẢNH & THƯ VIỆN GẦN ĐÂY -->
+                    <div class="image-gen-main custom-scrollbar">
+                        <!-- Canvas Hiển Thị Ảnh Chính -->
+                        <div class="sd-canvas-card">
+                            <div class="sd-canvas-wrapper" id="sd-canvas-wrapper">
+                                <div id="sd-empty-state" class="sd-empty-state">
+                                    <div class="sd-empty-icon">🎨</div>
+                                    <h3>Chưa có ảnh nào được tạo</h3>
+                                    <p>Nhập ý tưởng ở khung bên trái và bấm <strong>"Tạo Ảnh Ngay"</strong> để chiêm ngưỡng tác phẩm từ Stable Diffusion 1.5 chạy trực tiếp trên GPU của bạn.</p>
+                                </div>
+
+                                <div id="sd-loading-state" class="sd-loading-state" style="display: none;">
+                                    <div class="spinner-lg"></div>
+                                    <h4 id="sd-loading-title">Đang kích hoạt mô hình SD 1.5...</h4>
+                                    <p id="sd-loading-desc">Mô hình đang xử lý không gian tiềm ẩn (Latent Diffusion) trên GPU Quadro P600...</p>
+                                    <div class="sd-loading-progress-bar"><div class="sd-progress-fill"></div></div>
+                                </div>
+
+                                <div id="sd-result-state" class="sd-result-state" style="display: none;">
+                                    <img id="sd-result-img" src="" alt="AI Generated Image" class="sd-main-img">
+                                    <div class="sd-result-overlay">
+                                        <div class="sd-meta-badges">
+                                            <span id="sd-meta-time" class="meta-tag">⚡ 0.0s</span>
+                                            <span id="sd-meta-size" class="meta-tag">📐 512×512</span>
+                                            <span id="sd-meta-seed" class="meta-tag">🌱 Seed: -</span>
+                                        </div>
+                                        <div class="sd-actions-row">
+                                            <a id="sd-download-btn" href="#" download="ai_image.png" class="btn btn-primary btn-sm">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                                <span>Tải Ảnh Về</span>
+                                            </a>
+                                            <button type="button" id="sd-reuse-seed-btn" class="btn btn-secondary btn-sm" title="Dùng lại hạt giống (Seed) này để giữ nguyên phong cách">
+                                                🔁 Dùng Lại Seed
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="sd-prompt-used-box" class="sd-prompt-used-box" style="display: none;">
+                                <div class="prompt-used-header">
+                                    <strong>Prompt đã thực thi:</strong>
+                                    <span id="sd-style-badge" class="badge-pill"></span>
+                                </div>
+                                <p id="sd-prompt-used-text" class="prompt-used-content"></p>
+                            </div>
+                        </div>
+
+                        <!-- Thư Viện Tác Phẩm Gần Đây (History Gallery) -->
+                        <div class="sd-history-section">
+                            <div class="sd-history-header">
+                                <h4>🖼️ Thư Viện Tác Phẩm Gần Đây (<span id="sd-history-count">0</span>)</h4>
+                                <button type="button" id="sd-refresh-history-btn" class="btn btn-outline btn-xs">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                                    <span>Làm mới</span>
+                                </button>
+                            </div>
+                            <div id="sd-history-grid" class="sd-history-grid">
+                                <!-- Cards populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- TAB 3: OCR & BÓC TÁCH CÔNG THỨC TOÁN -->
             <!-- ======================================================== -->
             <section id="tab-ocr" class="tab-content">
@@ -2294,7 +2523,7 @@
     <script src="js/libs/jszip.min.js?v=2.6.0"></script>
     <script src="js/libs/docx-preview.js?v=2.6.0"></script>
     <script src="js/libs/xlsx.full.min.js?v=2.6.0"></script>
-    <script src="js/config.js?v=3.1.0"></script>
-    <script src="js/app.js?v=3.1.0"></script>
+    <script src="js/config.js?v=3.3.0"></script>
+    <script src="js/app.js?v=3.3.0"></script>
 </body>
 </html>
